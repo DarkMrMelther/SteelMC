@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["behavior","chunk","chunk_saver","command","config","entity","inventory","player","server","world"]};

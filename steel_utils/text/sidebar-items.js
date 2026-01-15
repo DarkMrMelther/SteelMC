@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["TextContent"],"mod":["color","interactivity","locale","style","translation"],"struct":["TextComponent"]};
