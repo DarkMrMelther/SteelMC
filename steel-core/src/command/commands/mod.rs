@@ -3,6 +3,7 @@ pub mod execute;
 pub mod gamemode;
 pub mod seed;
 pub mod stop;
+pub mod tellraw;
 pub mod weather;
 
 use std::marker::PhantomData;

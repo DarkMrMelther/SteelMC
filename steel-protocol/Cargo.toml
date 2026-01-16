@@ -41,3 +41,4 @@ async-compression.workspace = true
 
 # Utilities
 replace_with.workspace = true
+text_components.workspace = true

@@ -18,7 +18,9 @@ use steel_protocol::packets::game::{
 use steel_protocol::utils::{ConnectionProtocol, EnqueuedPacket, PacketError, RawPacket};
 use steel_registry::packets::play;
 use steel_utils::locks::{AsyncMutex, SyncMutex};
-use steel_utils::{text::TextComponent, translations};
+use steel_utils::translations;
+use text_components::TextComponent;
+use text_components::resolving::TextResolutor;
 use tokio::io::{BufReader, BufWriter};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::select;
@@ -122,7 +124,7 @@ impl JavaConnection {
 
     /// Disconnects the client.
     pub fn disconnect(&self, reason: impl Into<TextComponent>) {
-        self.send_packet(CDisconnect::new(reason.into()));
+        self.send_packet(CDisconnect::new(&reason.into(), self));
         self.close();
     }
 
@@ -360,5 +362,19 @@ impl JavaConnection {
         let player = self.player.upgrade().expect("Player is not available");
         let world = player.world.clone();
         world.remove_player(player).await;
+    }
+}
+
+impl TextResolutor for JavaConnection {
+    fn resolve_content(&self, _resolvable: &text_components::content::Resolvable) -> TextComponent {
+        TextComponent::new()
+    }
+
+    fn resolve_custom(&self, _data: &text_components::custom::CustomData) -> Option<TextComponent> {
+        None
+    }
+
+    fn translate(&self, _key: &str) -> Option<String> {
+        None
     }
 }
