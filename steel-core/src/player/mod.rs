@@ -58,9 +58,9 @@ use text_components::{
 };
 use uuid::Uuid;
 
-use crate::inventory::SyncPlayerInv;
 use crate::player::player_inventory::PlayerInventory;
 use crate::server::Server;
+use crate::{command::commands::gamemode::get_gamemode_translation, inventory::SyncPlayerInv};
 use crate::{
     config::STEEL_CONFIG,
     entity::{Entity, EntityLevelCallback, NullEntityCallback, RemovalReason},
@@ -1201,6 +1201,12 @@ impl Player {
         let update_packet =
             CPlayerInfoUpdate::update_game_mode(self.gameprofile.id, gamemode as i32);
         self.world.broadcast_to_all(update_packet);
+
+        self.send_message(
+            &translations::COMMANDS_GAMEMODE_SUCCESS_SELF
+                .message([get_gamemode_translation(gamemode)])
+                .into(),
+        );
 
         true
     }

@@ -11,7 +11,8 @@ use std::{
 
 use steel_crypto::key_store::KeyStore;
 use steel_protocol::packets::game::{
-    CLogin, CSetHeldSlot, CSystemChat, CTabList, CTickingState, CTickingStep, CommonPlayerSpawnInfo,
+    CEntityEvent, CLogin, CSetHeldSlot, CSystemChat, CTabList, CTickingState, CTickingStep,
+    CommonPlayerSpawnInfo, EntityStatus,
 };
 use steel_registry::game_rules::GameRuleValue;
 use steel_registry::vanilla_dimension_types::OVERWORLD;
@@ -187,6 +188,11 @@ impl Server {
 
         let commands = self.command_dispatcher.read().get_commands();
         player.connection.send_packet(commands);
+
+        player.connection.send_packet(CEntityEvent {
+            entity_id: player.id,
+            event: EntityStatus::OpLevel4,
+        });
 
         // Send current ticking state to the joining player
         self.send_ticking_state_to_player(&player);
