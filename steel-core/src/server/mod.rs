@@ -215,7 +215,7 @@ impl Server {
         let commands = self.command_dispatcher.read().get_commands();
         player.send_packet(commands);
 
-        player.connection.send_packet(CEntityEvent {
+        player.send_packet(CEntityEvent {
             entity_id: player.id,
             event: EntityStatus::OpLevel4,
         });
