@@ -18,8 +18,9 @@ const ENTITY_EVENTS: &str = "entity_events";
 pub fn main() {
     println!("cargo:rerun-if-changed=build/");
 
-    if !Path::new(OUT_DIR).exists() {
-        fs::create_dir_all(OUT_DIR).expect("Failed to create output directory");
+    if !Path::new(&format!("{OUT_DIR}/vanilla_translations")).exists() {
+        fs::create_dir_all(format!("{OUT_DIR}/vanilla_translations"))
+            .expect("Failed to create output directory");
     }
 
     let content = build_translations("build_assets/en_us.json");
