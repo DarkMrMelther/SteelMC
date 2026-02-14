@@ -93,7 +93,7 @@ pub use c_container_set_content::CContainerSetContent;
 pub use c_container_set_data::CContainerSetData;
 pub use c_container_set_slot::CContainerSetSlot;
 pub use c_disguised_chat::CDisguisedChat;
-pub use c_entity_event::{CEntityEvent, EntityStatus};
+pub use c_entity_event::CEntityEvent;
 pub use c_entity_position_sync::CEntityPositionSync;
 pub use c_forget_level_chunk::CForgetLevelChunk;
 pub use c_game_event::CGameEvent;

@@ -346,6 +346,7 @@ impl JavaConnection {
                 player.send_packet(CPongResponse::new(packet.time));
             }
             play::S_CHANGE_GAME_MODE => {
+                // TODO: Check player permission level (Or gamemode permission)
                 let packet = SChangeGameMode::read_packet(data)?;
                 player.set_game_mode(packet.gamemode);
             }

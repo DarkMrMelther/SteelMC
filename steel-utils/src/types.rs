@@ -647,6 +647,42 @@ impl From<GameType> for f32 {
     }
 }
 
+#[allow(missing_docs)]
+impl From<i8> for GameType {
+    fn from(value: i8) -> Self {
+        match value {
+            1 => GameType::Creative,
+            2 => GameType::Adventure,
+            3 => GameType::Spectator,
+            _ => GameType::Survival,
+        }
+    }
+}
+
+#[allow(missing_docs)]
+impl From<i32> for GameType {
+    fn from(value: i32) -> Self {
+        match value {
+            1 => GameType::Creative,
+            2 => GameType::Adventure,
+            3 => GameType::Spectator,
+            _ => GameType::Survival,
+        }
+    }
+}
+
+#[allow(missing_docs)]
+impl From<f32> for GameType {
+    fn from(value: f32) -> Self {
+        match value {
+            1. => GameType::Creative,
+            2. => GameType::Adventure,
+            3. => GameType::Spectator,
+            _ => GameType::Survival,
+        }
+    }
+}
+
 /// An identifier used by Minecraft.
 #[derive(Clone, PartialEq, Eq, Hash, Default)]
 pub struct Identifier {

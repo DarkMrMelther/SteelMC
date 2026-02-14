@@ -22,13 +22,13 @@ use crate::world::{World, WorldConfig, WorldTickTimings};
 use steel_crypto::key_store::KeyStore;
 use steel_protocol::packets::game::{
     CEntityEvent, CGameEvent, CLogin, CSetHeldSlot, CSystemChat, CTabList, CTickingState,
-    CTickingStep, CommonPlayerSpawnInfo, EntityStatus, GameEventType,
+    CTickingStep, CommonPlayerSpawnInfo, GameEventType,
 };
 use steel_registry::game_rules::GameRuleValue;
 use steel_registry::vanilla_dimension_types::OVERWORLD;
 use steel_registry::vanilla_game_rules::{IMMEDIATE_RESPAWN, LIMITED_CRAFTING, REDUCED_DEBUG_INFO};
 use steel_registry::{REGISTRY, Registry, vanilla_blocks};
-use steel_utils::locks::SyncRwLock;
+use steel_utils::{entity_events::EntityStatus, locks::SyncRwLock};
 use text_components::{Modifier, TextComponent, format::Color};
 use tick_rate_manager::{SprintReport, TickRateManager};
 use tokio::{runtime::Runtime, task::spawn_blocking, time::sleep};
@@ -239,9 +239,10 @@ impl Server {
         let commands = self.command_dispatcher.read().get_commands();
         player.send_packet(commands);
 
+        // TODO: Set permissions level to match player's level
         player.send_packet(CEntityEvent {
             entity_id: player.id,
-            event: EntityStatus::OpLevel4,
+            event: EntityStatus::PermissionLevelOwners,
         });
 
         // Send current ticking state to the joining player

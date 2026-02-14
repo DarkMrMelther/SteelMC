@@ -237,6 +237,9 @@ pub struct Player {
     /// The player's current game mode (Survival, Creative, Adventure, Spectator)
     pub game_mode: AtomicCell<GameType>,
 
+    /// The player's last game mode
+    pub prev_game_mode: AtomicCell<GameType>,
+
     /// The player's inventory container (shared with `inventory_menu`).
     pub inventory: SyncPlayerInv,
 
@@ -360,6 +363,7 @@ impl Player {
             chat_session: SyncMutex::new(None),
             message_chain: SyncMutex::new(None),
             game_mode: AtomicCell::new(GameType::Survival),
+            prev_game_mode: AtomicCell::new(GameType::Survival),
             inventory: inventory.clone(),
             inventory_menu: SyncMutex::new(InventoryMenu::new(inventory)),
             open_menu: SyncMutex::new(None),
@@ -1241,6 +1245,7 @@ impl Player {
             return false;
         }
 
+        self.prev_game_mode.store(self.game_mode.load());
         self.game_mode.store(gamemode);
 
         // Update abilities based on new game mode (mirrors vanilla GameType.updatePlayerAbilities)
