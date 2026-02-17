@@ -194,7 +194,7 @@ impl Server {
                 dimension: dimension_key,
                 seed: hashed_seed,
                 game_type: player.game_mode.load(),
-                previous_game_type: None,
+                previous_game_type: Some(player.prev_game_mode.load()),
                 is_debug: false,
                 // TODO: Change once we add a normal generator
                 is_flat: true,
