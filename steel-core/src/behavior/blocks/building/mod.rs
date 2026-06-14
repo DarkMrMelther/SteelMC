@@ -12,6 +12,7 @@ mod scaffolding_block;
 mod slab_block;
 mod slime_block;
 mod stair_block;
+mod trapdoor_block;
 mod weathering_block;
 
 pub use bed_block::BedBlock;
@@ -28,4 +29,5 @@ pub use scaffolding_block::ScaffoldingBlock;
 pub use slab_block::{SlabBlock, WeatheringCopperSlabBlock};
 pub use slime_block::SlimeBlock;
 pub use stair_block::{StairBlock, WeatheringCopperStairBlock};
+pub use trapdoor_block::TrapDoorBlock;
 pub use weathering_block::{WeatherState, WeatheringCopper, WeatheringCopperFullBlock};
