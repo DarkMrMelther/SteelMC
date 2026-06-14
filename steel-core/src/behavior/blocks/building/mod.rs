@@ -1,4 +1,6 @@
+mod amethyst_cluster;
 mod bed_block;
+mod budding_amethyst;
 mod campfire_block;
 mod door_block;
 mod fence_block;
@@ -15,7 +17,9 @@ mod stair_block;
 mod trapdoor_block;
 mod weathering_block;
 
+pub use amethyst_cluster::AmethystClusterBlock;
 pub use bed_block::BedBlock;
+pub use budding_amethyst::BuddingAmethystBlock;
 pub use campfire_block::CampfireBlock;
 pub use door_block::{DoorBlock, WeatheringCopperDoorBlock};
 pub use fence_block::FenceBlock;

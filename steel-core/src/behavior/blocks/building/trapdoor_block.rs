@@ -24,7 +24,7 @@ use steel_registry::{
 };
 use steel_utils::{BlockPos, BlockStateId, types::UpdateFlags};
 
-/// Behavior for vanilla door blocks.
+/// Behavior for vanilla trapdoor blocks.
 #[block_behavior]
 pub struct TrapDoorBlock {
     block: BlockRef,
@@ -37,7 +37,7 @@ pub struct TrapDoorBlock {
 }
 
 impl TrapDoorBlock {
-    /// Creates a new door block behavior.
+    /// Creates a new trapdoor block behavior.
     #[must_use]
     pub const fn new(
         block: BlockRef,
@@ -88,7 +88,7 @@ impl TrapDoorBlock {
             &BlockStateProperties::OPEN,
             !state.get_value(&BlockStateProperties::OPEN),
         );
-        world.set_block(pos, block_state, UpdateFlags::from_bits_retain(2));
+        world.set_block(pos, block_state, UpdateFlags::UPDATE_CLIENTS);
         if block_state.get_value(&BlockStateProperties::WATERLOGGED) {
             let delay = world.fluid_tick_delay(&vanilla_fluids::WATER);
             let _ = world.schedule_fluid_tick_default(pos, &vanilla_fluids::WATER, delay);
@@ -197,7 +197,7 @@ impl BlockBehavior for TrapDoorBlock {
         world.set_block(
             pos,
             block_state.set_value(&BlockStateProperties::POWERED, signal),
-            UpdateFlags::from_bits_retain(2),
+            UpdateFlags::UPDATE_CLIENTS,
         );
         if state.get_value(&BlockStateProperties::WATERLOGGED) {
             let delay = world.fluid_tick_delay(&vanilla_fluids::WATER);
