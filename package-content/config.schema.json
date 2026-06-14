@@ -213,6 +213,11 @@
           "type": "boolean",
           "description": "Whether the extra data of the log should be displayed",
           "default": false
+        },
+        "file": {
+          "type": "boolean",
+          "description": "Whether the log should be written into a file",
+          "default": true
         }
       },
       "required": ["time", "module_path", "extra"],

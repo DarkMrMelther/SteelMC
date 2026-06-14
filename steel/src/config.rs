@@ -108,6 +108,8 @@ pub struct LogConfig {
     pub module_path: bool,
     /// Whether the extra data of the log should be displayed
     pub extra: bool,
+    /// Whether the log should be written into a file
+    pub file: bool,
 }
 
 /// Time format for log entries

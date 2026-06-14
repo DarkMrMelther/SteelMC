@@ -101,25 +101,28 @@ impl CommandLogger {
             tokio::select! {
                 biased;
                 Some((lvl, data)) = receiver.recv() => {
-                    self.write_log_entry(lvl, data).await;
+                    let (lvl, data) = self.write_log_entry(lvl, data).await;
+                    if self.log_config.as_ref().is_some_and(|l| l.file) {
+                        self.write_file_entry(lvl, data).await;
+                    }
                 }
                 () = self.cancel_token.cancelled() => break,
             }
         }
     }
 
-    async fn write_log_entry(&self, lvl: Level, data: LogData) {
+    async fn write_log_entry(&self, lvl: Level, data: LogData) -> (Level, LogData) {
         let mut input = self.input.write().await;
         let pos = input.out.get_current_pos();
 
         if let Err(err) = input.out.cursor_to(pos, (0, 0)) {
             log::error!("{err}");
-            return;
+            return (lvl, data);
         }
 
         let time_str = self.format_time();
-        let module_path_str = self.format_module_path(&data);
-        let extra_str = self.format_extra(&data);
+        let module_path_str = self.format_module_path(&data, true);
+        let extra_str = self.format_extra(&data, true);
 
         if let Err(err) = writeln!(
             input.out,
@@ -128,7 +131,7 @@ impl CommandLogger {
             data.message,
         ) {
             log::error!("{err}");
-            return;
+            return (lvl, data);
         }
 
         if let Err(err) = input.out.cursor_to((0, 0), pos) {
@@ -136,6 +139,24 @@ impl CommandLogger {
         }
         if let Err(err) = input.rewrite_current_input() {
             log::error!("{err}");
+        }
+        (lvl, data)
+    }
+
+    async fn write_file_entry(&self, lvl: Level, data: LogData) {
+        let mut input = self.input.write().await;
+
+        let time_str = self.format_time();
+        let module_path_str = self.format_module_path(&data, false);
+        let extra_str = self.format_extra(&data, false);
+
+        if let Err(err) = writeln!(
+            input.file,
+            "{time_str}{lvl:?} {module_path_str}{}{extra_str}",
+            strip_ansi_escapes::strip_str(&data.message),
+        ) {
+            log::error!("{err}");
+            return;
         }
     }
 
@@ -153,27 +174,35 @@ impl CommandLogger {
         }
     }
 
-    fn format_module_path(&self, data: &LogData) -> String {
+    fn format_module_path(&self, data: &LogData, color: bool) -> String {
         if self.log_config.as_ref().is_some_and(|l| l.module_path) {
-            format!(
-                " {}{}{} ",
-                SetForegroundColor(DarkGrey),
-                data.module_path,
-                ResetColor
-            )
+            if color {
+                format!(
+                    " {}{}{} ",
+                    SetForegroundColor(DarkGrey),
+                    data.module_path,
+                    ResetColor
+                )
+            } else {
+                format!(" {} ", data.module_path)
+            }
         } else {
             String::new()
         }
     }
 
-    fn format_extra(&self, data: &LogData) -> String {
+    fn format_extra(&self, data: &LogData, color: bool) -> String {
         if self.log_config.as_ref().is_some_and(|l| l.extra) {
-            format!(
-                "{}{}{}",
-                SetForegroundColor(DarkGrey),
-                data.extra,
-                ResetColor
-            )
+            if color {
+                format!(
+                    "{}{}{}",
+                    SetForegroundColor(DarkGrey),
+                    data.extra,
+                    ResetColor
+                )
+            } else {
+                data.extra.clone()
+            }
         } else {
             String::new()
         }

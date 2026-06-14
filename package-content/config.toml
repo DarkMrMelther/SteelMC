@@ -60,3 +60,5 @@ time = "uptime"
 module_path = false
 # Whether the extra data of the log should be displayed
 extra = false
+# Whether the log should be written into a file
+file = true

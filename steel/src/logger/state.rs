@@ -12,6 +12,7 @@ use crossterm::{
 };
 use std::{
     fmt::Write as _,
+    fs::File,
     io::{Result, Write},
 };
 use tokio_util::sync::CancellationToken;
@@ -24,6 +25,7 @@ pub struct LogState {
     #[cfg(feature = "spawn_chunk_display")]
     pub spawn_display: SpawnProgressDisplay,
     pub cancel_token: CancellationToken,
+    pub file: File,
 }
 
 impl LogState {
@@ -36,6 +38,11 @@ impl LogState {
             spawn_display: SpawnProgressDisplay::new(),
             selection: Selection::new(),
             cancel_token,
+            file: std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open("./.tmp/steel.log")
+                .unwrap(),
         }
     }
 }
