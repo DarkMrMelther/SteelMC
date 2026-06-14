@@ -16,7 +16,7 @@ pub use building::{
     HayBlock, HoneyBlock, LavaCauldronBlock, MagmaBlock, PowderSnowBlock, RotatedPillarBlock,
     ScaffoldingBlock, SlabBlock, SlimeBlock, StairBlock, TrapDoorBlock, WeatherState,
     WeatheringCopper, WeatheringCopperDoorBlock, WeatheringCopperFullBlock,
-    WeatheringCopperSlabBlock, WeatheringCopperStairBlock,
+    WeatheringCopperSlabBlock, WeatheringCopperStairBlock, WeatheringCopperTrapDoorBlock,
 };
 pub use container::{BarrelBlock, BeehiveBlock, CraftingTableBlock};
 pub use decoration::{

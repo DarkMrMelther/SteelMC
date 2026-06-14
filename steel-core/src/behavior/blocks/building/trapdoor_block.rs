@@ -6,6 +6,7 @@
 use crate::{
     behavior::{
         BlockBehavior, BlockHitResult, BlockPlaceContext, InteractionResult, InventoryAccess,
+        blocks::{WeatherState, WeatheringCopper},
     },
     entity::Entity,
     player::Player,
@@ -28,6 +29,19 @@ use steel_utils::{BlockPos, BlockStateId, types::UpdateFlags};
 #[block_behavior]
 pub struct TrapDoorBlock {
     block: BlockRef,
+    #[json_arg(value, json = "type_can_open_by_hand")]
+    can_open_by_hand: bool,
+    #[json_arg(sound_events, json = "type_door_open")]
+    sound_open: SoundEventRef,
+    #[json_arg(sound_events, json = "type_door_close")]
+    sound_close: SoundEventRef,
+}
+/// Behavior for vanilla copper trapdoor blocks.
+#[block_behavior]
+pub struct WeatheringCopperTrapDoorBlock {
+    block: BlockRef,
+    #[json_arg(r#enum = "WeatherState", json = "weather_state")]
+    weathering: WeatheringCopper,
     #[json_arg(value, json = "type_can_open_by_hand")]
     can_open_by_hand: bool,
     #[json_arg(sound_events, json = "type_door_open")]
@@ -192,4 +206,86 @@ impl BlockBehavior for TrapDoorBlock {
             let _ = world.schedule_fluid_tick_default(pos, &vanilla_fluids::WATER, delay);
         }
     }
+}
+
+impl WeatheringCopperTrapDoorBlock {
+    /// Creates a new copper trapdoor behavior.
+    #[must_use]
+    pub const fn new(
+        block: BlockRef,
+        weather_state: WeatherState,
+        can_open_by_hand: bool,
+        sound_open: SoundEventRef,
+        sound_close: SoundEventRef,
+    ) -> Self {
+        Self {
+            block,
+            weathering: WeatheringCopper::new(weather_state),
+            can_open_by_hand,
+            sound_open,
+            sound_close,
+        }
+    }
+
+    const fn trapdoor(&self) -> TrapDoorBlock {
+        TrapDoorBlock::new(
+            self.block,
+            self.can_open_by_hand,
+            self.sound_open,
+            self.sound_close,
+        )
+    }
+}
+
+impl BlockBehavior for WeatheringCopperTrapDoorBlock {
+    fn get_state_for_placement(&self, context: &BlockPlaceContext<'_>) -> Option<BlockStateId> {
+        self.trapdoor().get_state_for_placement(context)
+    }
+
+    fn update_shape(
+        &self,
+        state: BlockStateId,
+        world: &dyn ScheduledTickAccess,
+        pos: BlockPos,
+        direction: Direction,
+        neighbor_pos: BlockPos,
+        neighbor_state: BlockStateId,
+    ) -> BlockStateId {
+        self.trapdoor()
+            .update_shape(state, world, pos, direction, neighbor_pos, neighbor_state)
+    }
+
+    fn use_without_item(
+        &self,
+        state: BlockStateId,
+        world: &Arc<World>,
+        pos: BlockPos,
+        player: &Player,
+        hit_result: &BlockHitResult,
+        inv: &mut InventoryAccess,
+    ) -> InteractionResult {
+        self.trapdoor()
+            .use_without_item(state, world, pos, player, hit_result, inv)
+    }
+
+    fn handle_neighbor_changed(
+        &self,
+        state: BlockStateId,
+        world: &Arc<World>,
+        pos: BlockPos,
+        source_block: BlockRef,
+        moved_by_piston: bool,
+    ) {
+        self.trapdoor()
+            .handle_neighbor_changed(state, world, pos, source_block, moved_by_piston);
+    }
+
+    fn is_randomly_ticking(&self, _state: BlockStateId) -> bool {
+        self.weathering.is_randomly_ticking()
+    }
+
+    fn random_tick(&self, state: BlockStateId, world: &Arc<World>, pos: BlockPos) {
+        self.weathering.change_over_time(state, world, pos);
+    }
+    // TODO: Implement WeatheringCopper::get_age
 }

@@ -33,5 +33,5 @@ pub use scaffolding_block::ScaffoldingBlock;
 pub use slab_block::{SlabBlock, WeatheringCopperSlabBlock};
 pub use slime_block::SlimeBlock;
 pub use stair_block::{StairBlock, WeatheringCopperStairBlock};
-pub use trapdoor_block::TrapDoorBlock;
+pub use trapdoor_block::{TrapDoorBlock, WeatheringCopperTrapDoorBlock};
 pub use weathering_block::{WeatherState, WeatheringCopper, WeatheringCopperFullBlock};
