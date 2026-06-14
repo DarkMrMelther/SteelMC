@@ -305,7 +305,7 @@ impl CommandLogger {
                             }
                         }
                         ExtendedKey::String(mut string) => {
-                            let sended = false;
+                            let sent = false;
                             if string.contains('\n') {
                                 string = string.replace('\n', "");
                             }
@@ -324,7 +324,7 @@ impl CommandLogger {
                                 state.push(string)?;
                             }
 
-                            if sended {
+                            if sent {
                                 send_state(lock);
                             }
 
