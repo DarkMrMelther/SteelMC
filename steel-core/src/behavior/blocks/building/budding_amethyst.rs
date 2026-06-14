@@ -6,7 +6,11 @@ use std::sync::Arc;
 use steel_macros::block_behavior;
 use steel_registry::{
     REGISTRY, RegistryEntry,
-    blocks::{BlockRef, block_state_ext::BlockStateExt, properties::BlockStateProperties},
+    blocks::{
+        BlockRef,
+        block_state_ext::BlockStateExt,
+        properties::{BlockStateProperties, BoolProperty, EnumProperty},
+    },
     vanilla_blocks,
 };
 use steel_utils::{BlockPos, BlockStateId, Direction, types::UpdateFlags};
@@ -16,6 +20,9 @@ use steel_utils::{BlockPos, BlockStateId, Direction, types::UpdateFlags};
 pub struct BuddingAmethystBlock {
     block: BlockRef,
 }
+
+const FACING: &EnumProperty<Direction> = &BlockStateProperties::FACING;
+const WATERLOGGED: &BoolProperty = &BlockStateProperties::WATERLOGGED;
 
 impl BuddingAmethystBlock {
     /// Creates a new budding amethyst block behavior.
@@ -35,7 +42,7 @@ impl BuddingAmethystBlock {
         direction: Direction,
         block: BlockRef,
     ) -> bool {
-        block_id == block.id() && state.get_value(&BlockStateProperties::FACING) == direction
+        block_id == block.id() && state.get_value(FACING) == direction
     }
 }
 
@@ -89,14 +96,12 @@ impl BlockBehavior for BuddingAmethystBlock {
             if let Some(stage) = stage {
                 let block_state = stage
                     .default_state()
-                    .set_value(&BlockStateProperties::FACING, direction)
+                    .set_value(FACING, direction)
                     .set_value(
-                        &BlockStateProperties::WATERLOGGED,
-                        state
-                            .try_get_value(&BlockStateProperties::WATERLOGGED)
-                            .unwrap_or(false),
+                        WATERLOGGED,
+                        state.try_get_value(WATERLOGGED).unwrap_or(false),
                     );
-                world.set_block(grow_pos, block_state, UpdateFlags::UPDATE_ALL_IMMEDIATE);
+                world.set_block(grow_pos, block_state, UpdateFlags::UPDATE_ALL);
             }
         }
     }

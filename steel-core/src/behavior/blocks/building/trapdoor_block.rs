@@ -17,7 +17,7 @@ use steel_registry::{
     blocks::{
         BlockRef,
         block_state_ext::BlockStateExt as _,
-        properties::{BlockStateProperties, Direction, Half},
+        properties::{BlockStateProperties, BoolProperty, Direction, EnumProperty, Half},
     },
     sound_event::SoundEventRef,
     vanilla_fluids, vanilla_game_events,
@@ -35,6 +35,12 @@ pub struct TrapDoorBlock {
     #[json_arg(sound_events, json = "type_door_close")]
     sound_close: SoundEventRef,
 }
+
+const OPEN: &BoolProperty = &BlockStateProperties::OPEN;
+const HALF: &EnumProperty<Half> = &BlockStateProperties::HALF;
+const POWERED: &BoolProperty = &BlockStateProperties::POWERED;
+const FACING: &EnumProperty<Direction> = &BlockStateProperties::FACING;
+const WATERLOGGED: &BoolProperty = &BlockStateProperties::WATERLOGGED;
 
 impl TrapDoorBlock {
     /// Creates a new trapdoor block behavior.
@@ -84,21 +90,13 @@ impl TrapDoorBlock {
     }
 
     fn toggle(&self, state: BlockStateId, world: &Arc<World>, pos: BlockPos, player: &Player) {
-        let block_state = state.set_value(
-            &BlockStateProperties::OPEN,
-            !state.get_value(&BlockStateProperties::OPEN),
-        );
+        let block_state = state.set_value(OPEN, !state.get_value(OPEN));
         world.set_block(pos, block_state, UpdateFlags::UPDATE_CLIENTS);
-        if block_state.get_value(&BlockStateProperties::WATERLOGGED) {
+        if block_state.get_value(WATERLOGGED) {
             let delay = world.fluid_tick_delay(&vanilla_fluids::WATER);
             let _ = world.schedule_fluid_tick_default(pos, &vanilla_fluids::WATER, delay);
         }
-        self.play_sound(
-            Some(player),
-            world,
-            pos,
-            block_state.get_value(&BlockStateProperties::OPEN),
-        );
+        self.play_sound(Some(player), world, pos, block_state.get_value(OPEN));
     }
 }
 
@@ -107,24 +105,19 @@ impl BlockBehavior for TrapDoorBlock {
         let mut state = self.block.default_state();
         let face = context.clicked_face;
         if !context.replace_clicked && face.is_horizontal() {
-            state = state
-                .set_value(&BlockStateProperties::FACING, face)
-                .set_value(
-                    &BlockStateProperties::HALF,
-                    if context.click_location.y - context.clicked_pos.y() as f64 > 0.5 {
-                        Half::Top
-                    } else {
-                        Half::Bottom
-                    },
-                );
+            state = state.set_value(FACING, face).set_value(
+                HALF,
+                if context.click_location.y - context.clicked_pos.y() as f64 > 0.5 {
+                    Half::Top
+                } else {
+                    Half::Bottom
+                },
+            );
         } else {
             state = state
+                .set_value(FACING, context.horizontal_direction.opposite())
                 .set_value(
-                    &BlockStateProperties::FACING,
-                    context.horizontal_direction.opposite(),
-                )
-                .set_value(
-                    &BlockStateProperties::HALF,
+                    HALF,
                     if face == Direction::Up {
                         Half::Bottom
                     } else {
@@ -134,15 +127,10 @@ impl BlockBehavior for TrapDoorBlock {
         };
 
         if Self::has_neighbor_signal(context.world, context.clicked_pos) {
-            state = state
-                .set_value(&BlockStateProperties::OPEN, true)
-                .set_value(&BlockStateProperties::POWERED, true);
+            state = state.set_value(OPEN, true).set_value(POWERED, true);
         };
 
-        Some(state.set_value(
-            &BlockStateProperties::WATERLOGGED,
-            context.is_water_source(),
-        ))
+        Some(state.set_value(WATERLOGGED, context.is_water_source()))
     }
 
     fn update_shape(
@@ -154,7 +142,7 @@ impl BlockBehavior for TrapDoorBlock {
         _neighbor_pos: BlockPos,
         _neighbor_state: BlockStateId,
     ) -> BlockStateId {
-        if state.get_value(&BlockStateProperties::WATERLOGGED) {
+        if state.get_value(WATERLOGGED) {
             let delay = world.fluid_tick_delay(&vanilla_fluids::WATER);
             let _ = world.schedule_fluid_tick_default(pos, &vanilla_fluids::WATER, delay);
         }
@@ -188,18 +176,18 @@ impl BlockBehavior for TrapDoorBlock {
     ) {
         let signal = Self::has_neighbor_signal(world, pos);
         let mut block_state = state;
-        if signal != state.get_value(&BlockStateProperties::POWERED) {
-            if signal != state.get_value(&BlockStateProperties::OPEN) {
-                block_state = block_state.set_value(&BlockStateProperties::OPEN, signal);
+        if signal != state.get_value(POWERED) {
+            if signal != state.get_value(OPEN) {
+                block_state = block_state.set_value(OPEN, signal);
                 self.play_sound(None, world, pos, signal);
             }
         }
         world.set_block(
             pos,
-            block_state.set_value(&BlockStateProperties::POWERED, signal),
+            block_state.set_value(POWERED, signal),
             UpdateFlags::UPDATE_CLIENTS,
         );
-        if state.get_value(&BlockStateProperties::WATERLOGGED) {
+        if state.get_value(WATERLOGGED) {
             let delay = world.fluid_tick_delay(&vanilla_fluids::WATER);
             let _ = world.schedule_fluid_tick_default(pos, &vanilla_fluids::WATER, delay);
         }
