@@ -16,6 +16,7 @@ use std::{
     sync::Arc,
 };
 use steel_core::command::sender::CommandSender;
+use tokio::sync::RwLockWriteGuard;
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use tokio::task::spawn_blocking;
 
@@ -85,21 +86,7 @@ impl CommandLogger {
                     match key {
                         ExtendedKey::Generic(key) => match key.code {
                             KeyCode::Enter => {
-                                if state.out.is_empty() {
-                                    continue;
-                                }
-                                let message = state.out.text.clone();
-                                state.history.push(&state.out);
-                                state.reset()?;
-                                drop(lock);
-                                steel_utils::console!("{}", message);
-                                if let Some(server) = SERVER.get() {
-                                    server.command_dispatcher.read().handle_command(
-                                        CommandSender::Console,
-                                        message,
-                                        server,
-                                    );
-                                }
+                                send_state(lock);
                                 continue;
                             }
                             KeyCode::Tab => {
@@ -317,7 +304,11 @@ impl CommandLogger {
                                 _ => continue,
                             }
                         }
-                        ExtendedKey::String(string) => {
+                        ExtendedKey::String(mut string) => {
+                            let sended = false;
+                            if string.contains('\n') {
+                                string = string.replace('\n', "");
+                            }
                             if string.chars().any(char::is_whitespace) {
                                 state.completion.selected = 0;
                             }
@@ -332,6 +323,11 @@ impl CommandLogger {
                             } else {
                                 state.push(string)?;
                             }
+
+                            if sended {
+                                send_state(lock);
+                            }
+
                             continue;
                         }
                     }
@@ -357,6 +353,23 @@ impl CommandLogger {
             }
         }
         Ok(())
+    }
+}
+
+fn send_state(mut lock: RwLockWriteGuard<'_, LogState>) {
+    if lock.out.is_empty() || lock.out.text.chars().all(char::is_whitespace) {
+        return;
+    }
+    let message = lock.out.text.clone();
+    lock.history.push(message.clone());
+    lock.reset().ok();
+    drop(lock);
+    steel_utils::console!("{}", message);
+    if let Some(server) = SERVER.get() {
+        server
+            .command_dispatcher
+            .read()
+            .handle_command(CommandSender::Console, message, server);
     }
 }
 

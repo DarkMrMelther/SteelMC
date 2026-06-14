@@ -1,4 +1,4 @@
-use crate::logger::{LogState, Move, output::Output};
+use crate::logger::{LogState, Move};
 use std::{borrow::Cow, collections::VecDeque, io::Result};
 use tokio::{fs, io::AsyncWriteExt};
 
@@ -35,11 +35,11 @@ impl History {
     }
 }
 impl History {
-    pub fn push(&mut self, out: &Output) {
-        if !self.values.is_empty() && self.values[0] == out.text {
+    pub fn push(&mut self, out: String) {
+        if !self.values.is_empty() && self.values[0] == out {
             return;
         }
-        self.values.push_front(Cow::Owned(out.text.clone()));
+        self.values.push_front(Cow::Owned(out));
     }
     pub fn update(state: &mut LogState, dir: Move) -> Result<()> {
         if state.history.values.is_empty() {
