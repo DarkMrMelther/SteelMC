@@ -27,7 +27,7 @@ const WATERLOGGED: &BoolProperty = &BlockStateProperties::WATERLOGGED;
 impl BuddingAmethystBlock {
     /// Creates a new budding amethyst block behavior.
     #[must_use]
-    pub fn new(block: BlockRef) -> Self {
+    pub const fn new(block: BlockRef) -> Self {
         Self { block }
     }
 
@@ -67,34 +67,34 @@ impl BlockBehavior for BuddingAmethystBlock {
                 );
             };
 
-            let mut stage: Option<BlockRef> = None;
+            let mut growth_stage: Option<BlockRef> = None;
             if Self::can_cluster_grow_at_state(state, block_id) {
-                stage = Some(&vanilla_blocks::SMALL_AMETHYST_BUD);
+                growth_stage = Some(&vanilla_blocks::SMALL_AMETHYST_BUD);
             } else if Self::check_cluster(
                 state,
                 block_id,
                 direction,
                 &vanilla_blocks::SMALL_AMETHYST_BUD,
             ) {
-                stage = Some(&vanilla_blocks::MEDIUM_AMETHYST_BUD);
+                growth_stage = Some(&vanilla_blocks::MEDIUM_AMETHYST_BUD);
             } else if Self::check_cluster(
                 state,
                 block_id,
                 direction,
                 &vanilla_blocks::MEDIUM_AMETHYST_BUD,
             ) {
-                stage = Some(&vanilla_blocks::LARGE_AMETHYST_BUD);
+                growth_stage = Some(&vanilla_blocks::LARGE_AMETHYST_BUD);
             } else if Self::check_cluster(
                 state,
                 block_id,
                 direction,
                 &vanilla_blocks::LARGE_AMETHYST_BUD,
             ) {
-                stage = Some(&vanilla_blocks::AMETHYST_CLUSTER);
+                growth_stage = Some(&vanilla_blocks::AMETHYST_CLUSTER);
             }
 
-            if let Some(stage) = stage {
-                let block_state = stage
+            if let Some(growth_stage) = growth_stage {
+                let block_state = growth_stage
                     .default_state()
                     .set_value(FACING, direction)
                     .set_value(

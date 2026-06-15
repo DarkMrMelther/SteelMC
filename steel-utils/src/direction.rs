@@ -293,9 +293,9 @@ impl Direction {
     }
 
     /// Returns a random direction
+    #[must_use]
     pub fn random() -> Self {
         match rand::random_range(0..6) {
-            0 => Self::Down,
             1 => Self::Up,
             2 => Self::North,
             3 => Self::South,

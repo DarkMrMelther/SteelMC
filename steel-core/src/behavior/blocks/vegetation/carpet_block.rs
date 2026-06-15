@@ -41,10 +41,10 @@ impl BlockBehavior for CarpetBlock {
         _neighbor_pos: BlockPos,
         _neighbor_state: BlockStateId,
     ) -> BlockStateId {
-        if !self.can_survive(state, world, pos) {
-            vanilla_blocks::AIR.default_state()
-        } else {
+        if self.can_survive(state, world, pos) {
             state
+        } else {
+            vanilla_blocks::AIR.default_state()
         }
     }
 }

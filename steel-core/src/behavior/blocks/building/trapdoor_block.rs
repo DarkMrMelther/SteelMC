@@ -40,8 +40,9 @@ pub struct TrapDoorBlock {
 #[block_behavior]
 pub struct WeatheringCopperTrapDoorBlock {
     block: BlockRef,
+    /// Weathering state of the block
     #[json_arg(r#enum = "WeatherState", json = "weather_state")]
-    weathering: WeatheringCopper,
+    pub weathering: WeatheringCopper,
     #[json_arg(value, json = "type_can_open_by_hand")]
     can_open_by_hand: bool,
     #[json_arg(sound_events, json = "type_door_open")]
@@ -84,7 +85,7 @@ impl TrapDoorBlock {
         } else {
             self.sound_close
         };
-        world.play_block_sound(sound, pos, 1.0, 1.0, player.and_then(|p| Some(p.id())));
+        world.play_block_sound(sound, pos, 1.0, 1.0, player.map(Entity::id));
         world.game_event(
             if open {
                 &vanilla_game_events::BLOCK_OPEN
@@ -121,7 +122,7 @@ impl BlockBehavior for TrapDoorBlock {
         if !context.replace_clicked && face.is_horizontal() {
             state = state.set_value(FACING, face).set_value(
                 HALF,
-                if context.click_location.y - context.clicked_pos.y() as f64 > 0.5 {
+                if context.click_location.y - f64::from(context.clicked_pos.y()) > 0.5 {
                     Half::Top
                 } else {
                     Half::Bottom
@@ -138,11 +139,11 @@ impl BlockBehavior for TrapDoorBlock {
                         Half::Top
                     },
                 );
-        };
+        }
 
         if Self::has_neighbor_signal(context.world, context.clicked_pos) {
             state = state.set_value(OPEN, true).set_value(POWERED, true);
-        };
+        }
 
         Some(state.set_value(WATERLOGGED, context.is_water_source()))
     }
@@ -172,11 +173,11 @@ impl BlockBehavior for TrapDoorBlock {
         _hit_result: &BlockHitResult,
         _inv: &mut InventoryAccess,
     ) -> InteractionResult {
-        if !self.can_open_by_hand {
-            InteractionResult::Pass
-        } else {
+        if self.can_open_by_hand {
             self.toggle(state, world, pos, player);
             InteractionResult::Success
+        } else {
+            InteractionResult::Pass
         }
     }
 
@@ -190,11 +191,9 @@ impl BlockBehavior for TrapDoorBlock {
     ) {
         let signal = Self::has_neighbor_signal(world, pos);
         let mut block_state = state;
-        if signal != state.get_value(POWERED) {
-            if signal != state.get_value(OPEN) {
-                block_state = block_state.set_value(OPEN, signal);
-                self.play_sound(None, world, pos, signal);
-            }
+        if signal != state.get_value(POWERED) && signal != state.get_value(OPEN) {
+            block_state = block_state.set_value(OPEN, signal);
+            self.play_sound(None, world, pos, signal);
         }
         world.set_block(
             pos,
@@ -287,5 +286,4 @@ impl BlockBehavior for WeatheringCopperTrapDoorBlock {
     fn random_tick(&self, state: BlockStateId, world: &Arc<World>, pos: BlockPos) {
         self.weathering.change_over_time(state, world, pos);
     }
-    // TODO: Implement WeatheringCopper::get_age
 }

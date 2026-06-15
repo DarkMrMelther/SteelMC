@@ -1,6 +1,6 @@
 use crate::{
     behavior::{BlockBehavior, BlockPlaceContext},
-    world::LevelReader,
+    world::{LevelReader, ScheduledTickAccess},
 };
 use steel_macros::block_behavior;
 use steel_registry::{
@@ -25,7 +25,7 @@ const WATERLOGGED: &BoolProperty = &BlockStateProperties::WATERLOGGED;
 impl AmethystClusterBlock {
     /// Creates a new cluster block behavior.
     #[must_use]
-    pub fn new(block: BlockRef) -> Self {
+    pub const fn new(block: BlockRef) -> Self {
         Self { block }
     }
 }
@@ -44,7 +44,7 @@ impl BlockBehavior for AmethystClusterBlock {
     fn update_shape(
         &self,
         state: BlockStateId,
-        world: &dyn crate::world::ScheduledTickAccess,
+        world: &dyn ScheduledTickAccess,
         pos: BlockPos,
         direction: Direction,
         _neighbor_pos: BlockPos,
