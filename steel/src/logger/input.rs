@@ -78,6 +78,7 @@ impl CommandLogger {
         reason = "splitting the key-dispatch match would hurt readability"
     )]
     async fn input_key(self: Arc<Self>, mut rx: UnboundedReceiver<ExtendedKey>) -> Result<()> {
+        let mut sent = false;
         loop {
             tokio::select! {
                 Some(key) = rx.recv() => {
@@ -301,11 +302,14 @@ impl CommandLogger {
                                     next(state)?;
                                     continue;
                                 }
+                                'j' => {
+                                    sent = true;
+                                    continue;
+                                }
                                 _ => continue,
                             }
                         }
                         ExtendedKey::String(mut string) => {
-                            let mut sent = false;
                             if string.contains('\n') {
                                 string = string.replace('\n', "");
                                 sent = true;
@@ -327,6 +331,7 @@ impl CommandLogger {
 
                             if sent {
                                 send_state(lock);
+                                sent = false
                             }
 
                             continue;
