@@ -331,7 +331,7 @@ impl CommandLogger {
 
                             if sent {
                                 send_state(lock);
-                                sent = false
+                                sent = false;
                             }
 
                             continue;

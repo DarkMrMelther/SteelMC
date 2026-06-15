@@ -33,6 +33,11 @@ mod suggestions;
 fn terminal_width() -> usize {
     terminal::size().map_or(80, |(w, _)| if w == 0 { 80 } else { w as usize })
 }
+/// Returns the terminal height, falling back to 30 rows if unavailable or 1 if it's <= 0.
+#[cfg(feature = "spawn_chunk_display")]
+fn terminal_height() -> usize {
+    terminal::size().map_or(30, |(_, h)| if h == 0 { 30 } else { h as usize })
+}
 
 pub(crate) use state::LogState;
 
@@ -223,14 +228,17 @@ impl CommandLogger {
         input.spawn_display.rendered = true;
         let pos = input.out.get_current_pos();
         input.out.cursor_to(pos, (0, 0))?;
+
+        let print_height = (terminal_height() - 1).min(DISPLAY_RADIUS as usize);
+        input.out.flush()?;
         write!(input.out, "\r{}", Clear(ClearType::FromCursorDown))?;
-        for _ in 0..=DISPLAY_RADIUS {
+        input.out.flush()?;
+        for _ in 0..=print_height {
             writeln!(input.out)?;
         }
         input.out.cursor_to((0, 0), pos)?;
         input.out.flush()?;
-        input.rewrite_current_input()?;
-        Ok(())
+        input.rewrite_current_input()
     }
 
     /// Ends the spawn display cleaning the screen
@@ -239,13 +247,16 @@ impl CommandLogger {
         use crossterm::cursor::MoveUp;
 
         let mut input = self.input.write().await;
+        let pos = input.out.get_current_pos();
+        input.out.cursor_to(pos, (0, 0)).ok();
         write!(
             input.out,
-            "{}\n{}",
-            MoveUp(DISPLAY_RADIUS as u16 + 2),
+            "{}\r{}",
+            MoveUp(DISPLAY_RADIUS as u16 + 1),
             Clear(ClearType::FromCursorDown)
         )
         .ok();
+        input.out.cursor_to((0, 0), pos).ok();
         input.rewrite_current_input().ok();
         input.spawn_display.rendered = false;
     }

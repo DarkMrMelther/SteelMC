@@ -109,22 +109,25 @@ impl SpawnProgressDisplay {
     }
 
     pub fn rewrite(&self, out: &mut Output) -> Result<()> {
+        let print_height = super::terminal_height().min(DISPLAY_DIAMETER);
+        out.cursor_to(out.get_current_pos(), (0, 0)).ok();
         write!(
             out,
-            "{}\n{}",
-            MoveUp(DISPLAY_RADIUS as u16 + 2),
+            "{}{}",
+            MoveUp((print_height / 2) as u16 + 1),
             Clear(ClearType::FromCursorDown)
         )?;
         let w = (super::terminal_width() / 2).saturating_sub((DISPLAY_RADIUS + 1) as usize) as u16;
-        for z in (0..DISPLAY_DIAMETER).step_by(2) {
+        for y in (DISPLAY_DIAMETER - print_height..DISPLAY_DIAMETER).step_by(2) {
             write!(out, "\r")?;
             if w != 0 {
                 write!(out, "{}", MoveRight(w))?;
             }
+
             for x in 0..DISPLAY_DIAMETER {
-                let front = status_color(self.grid[z][x]);
-                if z + 1 < DISPLAY_DIAMETER {
-                    let back = status_color(self.grid[z + 1][x]);
+                let front = status_color(self.grid[y][x]);
+                if y + 1 < DISPLAY_DIAMETER {
+                    let back = status_color(self.grid[y + 1][x]);
                     write!(
                         out,
                         "{}{}▀",
