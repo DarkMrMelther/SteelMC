@@ -19,6 +19,7 @@ use tracing::Subscriber;
 use tracing_subscriber::Layer;
 use tracing_subscriber::layer::Context;
 
+mod file;
 mod history;
 mod input;
 mod output;
@@ -30,7 +31,7 @@ mod suggestions;
 
 /// Returns the terminal width, falling back to 80 columns if unavailable or it's <= 0.
 fn terminal_width() -> usize {
-    terminal::size().map_or(80, |(w, _)| if w <= 0 { 80 } else { w as usize })
+    terminal::size().map_or(80, |(w, _)| if w == 0 { 80 } else { w as usize })
 }
 
 pub(crate) use state::LogState;
@@ -57,7 +58,6 @@ pub struct CommandLogger {
 impl CommandLogger {
     /// Initializes the `CommandLogger`
     pub async fn init(
-        history_path: &'static str,
         cancel_token: CancellationToken,
         log_config: Option<LogConfig>,
     ) -> Option<Arc<Self>> {
@@ -66,7 +66,7 @@ impl CommandLogger {
 
         let log = Arc::new(Self {
             input: Arc::new(AsyncRwLock::const_new(
-                LogState::new(history_path, cancel_token).await,
+                LogState::new(log_config.as_ref(), cancel_token).await,
             )),
             sender,
             cancel_token: log_cancel_token.clone(),
@@ -156,7 +156,6 @@ impl CommandLogger {
             strip_ansi_escapes::strip_str(&data.message),
         ) {
             log::error!("{err}");
-            return;
         }
     }
 
@@ -278,13 +277,10 @@ pub struct LoggerLayer(pub Arc<CommandLogger>);
 impl LoggerLayer {
     /// Creates a new logger
     pub async fn new(
-        history_path: &'static str,
         cancel_token: CancellationToken,
         log_config: Option<LogConfig>,
     ) -> Option<Self> {
-        Some(Self(
-            CommandLogger::init(history_path, cancel_token, log_config).await?,
-        ))
+        Some(Self(CommandLogger::init(cancel_token, log_config).await?))
     }
 }
 

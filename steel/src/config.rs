@@ -101,6 +101,8 @@ impl ServerConfig {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LogConfig {
+    /// Path where store the log files and history
+    pub log_path: String,
     /// Time display format: "none", "date" (HH:MM:SS:mmm), or "uptime" (seconds since start)
     #[serde(default)]
     pub time: LogTimeFormat,
@@ -110,6 +112,10 @@ pub struct LogConfig {
     pub extra: bool,
     /// Whether the log should be written into a file
     pub file: bool,
+    /// Time between log file rotations
+    pub rotation_time: RotationTimeFormat,
+    /// Amount of console commands saved
+    pub max_history: usize,
 }
 
 /// Time format for log entries
@@ -123,6 +129,23 @@ pub enum LogTimeFormat {
     Date,
     /// Seconds since server start
     Uptime,
+}
+
+/// Time for log files rotation
+#[derive(Debug, Clone, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum RotationTimeFormat {
+    /// No rotation
+    None,
+    /// Rotate hourly
+    Hourly,
+    /// Rotate daily
+    #[default]
+    Daily,
+    /// Rotate weekly
+    Weekly,
+    /// Rotate monthly
+    Monthly,
 }
 
 /// Loads the server configuration from the given path, or creates it if it doesn't exist.

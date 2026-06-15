@@ -65,7 +65,7 @@ async fn init_tracing(
     cancel_token: CancellationToken,
     log_config: Option<LogConfig>,
 ) -> Arc<CommandLogger> {
-    let layer = LoggerLayer::new("./.tmp", cancel_token, log_config)
+    let layer = LoggerLayer::new(cancel_token, log_config)
         .await
         .expect("Couldn't initialize the logger");
     let logger = layer.0.clone();

@@ -301,6 +301,10 @@ impl CommandLogger {
                                     next(state)?;
                                     continue;
                                 }
+                                'j' | 'm' => {
+                                    send_state(lock);
+                                    continue;
+                                }
                                 _ => continue,
                             }
                         }

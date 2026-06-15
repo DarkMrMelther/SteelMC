@@ -3,12 +3,13 @@ use std::{borrow::Cow, collections::VecDeque, io::Result};
 use tokio::{fs, io::AsyncWriteExt};
 
 pub struct History {
-    pub path: &'static str,
+    pub path: String,
     pub values: VecDeque<Cow<'static, str>>,
     pub pos: usize,
+    pub max: usize,
 }
 impl History {
-    pub async fn new(path: &'static str) -> Self {
+    pub async fn new(path: String, max: usize) -> Self {
         let file_path = format!("{path}/history.txt");
         let values = if let Ok(true) = fs::try_exists(&file_path).await {
             fs::read_to_string(file_path).await.map_or_else(
@@ -31,6 +32,7 @@ impl History {
             path,
             values,
             pos: 0,
+            max,
         }
     }
 }
@@ -40,6 +42,9 @@ impl History {
             return;
         }
         self.values.push_front(Cow::Owned(out));
+        if self.values.len() >= self.max {
+            self.values.drain(self.max..self.values.len());
+        }
     }
     pub fn update(state: &mut LogState, dir: Move) -> Result<()> {
         if state.history.values.is_empty() {
@@ -63,7 +68,7 @@ impl History {
         Ok(())
     }
     pub async fn save(&self) -> Result<()> {
-        fs::create_dir_all(self.path).await?;
+        fs::create_dir_all(&self.path).await?;
         let path = format!("{}/history.txt", self.path);
         if let Ok(true) = fs::try_exists(&path).await {
             fs::remove_file(&path).await?;

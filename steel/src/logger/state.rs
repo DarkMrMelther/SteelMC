@@ -1,18 +1,21 @@
-use crate::logger::Move;
+use crate::config::RotationTimeFormat;
+use crate::logger::file::LogFile;
 use crate::logger::history::History;
 use crate::logger::output::Output;
 use crate::logger::selection::Selection;
 #[cfg(feature = "spawn_chunk_display")]
 use crate::logger::spawn_progress::SpawnProgressDisplay;
 use crate::logger::suggestions::Completer;
+use crate::{config::LogConfig, logger::Move};
 use crossterm::{
     cursor::MoveLeft,
     style::{Attribute, Color, ResetColor, SetAttribute, SetForegroundColor},
     terminal::{Clear, ClearType},
 };
+use std::fs::create_dir_all;
+use std::path::Path;
 use std::{
     fmt::Write as _,
-    fs::File,
     io::{Result, Write},
 };
 use tokio_util::sync::CancellationToken;
@@ -25,24 +28,32 @@ pub struct LogState {
     #[cfg(feature = "spawn_chunk_display")]
     pub spawn_display: SpawnProgressDisplay,
     pub cancel_token: CancellationToken,
-    pub file: File,
+    pub file: LogFile,
 }
 
 impl LogState {
-    pub async fn new(path: &'static str, cancel_token: CancellationToken) -> Self {
+    pub async fn new(log_config: Option<&LogConfig>, cancel_token: CancellationToken) -> Self {
+        let path = log_config.map_or(String::from("./.tmp"), |l| {
+            l.log_path.trim_end_matches('/').to_string()
+        });
+        let rotation_time =
+            log_config.map_or(RotationTimeFormat::None, |l| l.rotation_time.clone());
+        let log_enabled = log_config.is_some_and(|l| l.file);
+        let max_history = log_config.map_or(50, |l| l.max_history);
+
+        if !Path::new(&path).exists() {
+            create_dir_all(&path).unwrap_or_else(|_| panic!("Can't make the logs folder ({path})"));
+        }
+
         LogState {
             out: Output::new(),
             completion: Completer::new(),
-            history: History::new(path).await,
+            history: History::new(path.clone(), max_history).await,
             #[cfg(feature = "spawn_chunk_display")]
             spawn_display: SpawnProgressDisplay::new(),
             selection: Selection::new(),
             cancel_token,
-            file: std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open("./.tmp/steel.log")
-                .unwrap(),
+            file: LogFile::new(path, rotation_time, log_enabled),
         }
     }
 }
