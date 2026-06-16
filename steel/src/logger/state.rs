@@ -3,8 +3,6 @@ use crate::logger::file::LogFile;
 use crate::logger::history::History;
 use crate::logger::output::Output;
 use crate::logger::selection::Selection;
-#[cfg(feature = "spawn_chunk_display")]
-use crate::logger::spawn_progress::SpawnProgressDisplay;
 use crate::logger::suggestions::Completer;
 use crate::{config::LogConfig, logger::Move};
 use crossterm::{
@@ -25,8 +23,6 @@ pub struct LogState {
     pub completion: Completer,
     pub history: History,
     pub selection: Selection,
-    #[cfg(feature = "spawn_chunk_display")]
-    pub spawn_display: SpawnProgressDisplay,
     pub cancel_token: CancellationToken,
     pub file: LogFile,
 }
@@ -49,8 +45,6 @@ impl LogState {
             out: Output::new(),
             completion: Completer::new(),
             history: History::new(path.clone(), max_history).await,
-            #[cfg(feature = "spawn_chunk_display")]
-            spawn_display: SpawnProgressDisplay::new(),
             selection: Selection::new(),
             cancel_token,
             file: LogFile::new(path, rotation_time, log_enabled),
