@@ -12,11 +12,11 @@ mod redstone;
 pub mod vegetation;
 
 pub use building::{
-    BedBlock, CampfireBlock, DoorBlock, FenceBlock, HayBlock, HoneyBlock, LavaCauldronBlock,
-    MagmaBlock, PotentSulfurBlock, PowderSnowBlock, RotatedPillarBlock, ScaffoldingBlock,
-    SlabBlock, SlimeBlock, StairBlock, TrapDoorBlock, WeatherState, WeatheringCopper,
-    WeatheringCopperDoorBlock, WeatheringCopperFullBlock, WeatheringCopperSlabBlock,
-    WeatheringCopperStairBlock, WeatheringCopperTrapDoorBlock,
+    AmethystClusterBlock, BedBlock, BuddingAmethystBlock, CampfireBlock, DoorBlock, FenceBlock,
+    HayBlock, HoneyBlock, LavaCauldronBlock, MagmaBlock, PotentSulfurBlock, PowderSnowBlock,
+    RotatedPillarBlock, ScaffoldingBlock, SlabBlock, SlimeBlock, StairBlock, TrapDoorBlock,
+    WeatherState, WeatheringCopper, WeatheringCopperDoorBlock, WeatheringCopperFullBlock,
+    WeatheringCopperSlabBlock, WeatheringCopperStairBlock, WeatheringCopperTrapDoorBlock,
 };
 pub use container::{BarrelBlock, BeehiveBlock, CraftingTableBlock};
 pub use decoration::{
