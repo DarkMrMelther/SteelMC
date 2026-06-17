@@ -13,6 +13,7 @@ use steel_utils::text::DisplayResolutor;
 use text_components::fmt::set_display_resolutor;
 use tokio::runtime::{Builder, Runtime};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
+use tracing::Level;
 #[cfg(feature = "jaeger")]
 use tracing::Subscriber;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
@@ -65,6 +66,9 @@ async fn init_tracing(
     cancel_token: CancellationToken,
     log_config: Option<LogConfig>,
 ) -> Arc<CommandLogger> {
+    let log_level = log_config
+        .as_ref()
+        .map_or(Level::INFO.into(), |l| l.log_level.to_directive());
     let layer = LoggerLayer::new(cancel_token, log_config)
         .await
         .expect("Couldn't initialize the logger");
@@ -77,7 +81,7 @@ async fn init_tracing(
 
     let tracing = tracing.with(
         EnvFilter::builder()
-            .with_default_directive(tracing::Level::INFO.into())
+            .with_default_directive(log_level)
             .from_env_lossy(),
     );
 

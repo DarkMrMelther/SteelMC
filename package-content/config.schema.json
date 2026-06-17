@@ -203,6 +203,12 @@
           "description": "Whether the log should be written into a file",
           "default": "./.logs"
         },
+        "log_level": {
+          "type": "string",
+          "description": "The level of information the logger will show",
+          "enum": ["off", "error", "warn", "info", "debug", "trace"],
+          "default": "info"
+        },
         "time": {
           "type": "string",
           "description": "Time format: none, date (HH:MM:SS:mmm), or uptime (seconds since start)",
@@ -219,7 +225,7 @@
           "description": "Whether the extra data of the log should be displayed",
           "default": false
         },
-        "file": {
+        "log_file": {
           "type": "boolean",
           "description": "Whether the log should be written into a file",
           "default": true
@@ -237,7 +243,7 @@
           "minimum": 1
         }
       },
-      "required": ["log_path", "time", "module_path", "extra", "file", "rotation_time", "max_history"],
+      "required": ["log_path", "log_level", "time", "module_path", "extra", "log_file", "rotation_time", "max_history"],
       "additionalProperties": false
     }
   },

@@ -6,6 +6,8 @@
 
 use serde::Deserialize;
 use std::{collections::BTreeMap, fs, path::Path};
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::filter::Directive;
 
 use steel_core::config::{CompressionInfo, RuntimeConfig, ServerLinks, WorldsConfig};
 
@@ -103,6 +105,8 @@ impl ServerConfig {
 pub struct LogConfig {
     /// Path where store the log files and history
     pub log_path: String,
+    /// The level of information the logger will show
+    pub log_level: LogLevel,
     /// Time display format: "none", "date" (HH:MM:SS:mmm), or "uptime" (seconds since start)
     #[serde(default)]
     pub time: LogTimeFormat,
@@ -111,7 +115,7 @@ pub struct LogConfig {
     /// Whether the extra data of the log should be displayed
     pub extra: bool,
     /// Whether the log should be written into a file
-    pub file: bool,
+    pub log_file: bool,
     /// Time between log file rotations
     pub rotation_time: RotationTimeFormat,
     /// Amount of console commands saved
@@ -119,7 +123,7 @@ pub struct LogConfig {
 }
 
 /// Time format for log entries
-#[derive(Debug, Clone, Default, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum LogTimeFormat {
     /// No time displayed
@@ -132,7 +136,7 @@ pub enum LogTimeFormat {
 }
 
 /// Time for log files rotation
-#[derive(Debug, Clone, Default, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum RotationTimeFormat {
     /// No rotation
@@ -146,6 +150,39 @@ pub enum RotationTimeFormat {
     Weekly,
     /// Rotate monthly
     Monthly,
+}
+
+/// The level of information the logger will show
+#[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum LogLevel {
+    /// No logs
+    Off,
+    /// Only error logs
+    Error,
+    /// Error and warn logs
+    Warn,
+    /// All standard logs
+    #[default]
+    Info,
+    /// Standard + Debug info enabled
+    Debug,
+    /// All logs are shown
+    Trace,
+}
+impl LogLevel {
+    /// Converts the log level in it's respective logging directive
+    #[must_use]
+    pub fn to_directive(self) -> Directive {
+        match self {
+            LogLevel::Off => LevelFilter::OFF.into(),
+            LogLevel::Error => LevelFilter::ERROR.into(),
+            LogLevel::Warn => LevelFilter::WARN.into(),
+            LogLevel::Info => LevelFilter::INFO.into(),
+            LogLevel::Debug => LevelFilter::DEBUG.into(),
+            LogLevel::Trace => LevelFilter::TRACE.into(),
+        }
+    }
 }
 
 /// Loads the server configuration from the given path, or creates it if it doesn't exist.

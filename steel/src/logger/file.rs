@@ -21,7 +21,7 @@ impl LogFile {
             OpenOptions::new()
                 .create(true)
                 .append(true)
-                .open(Self::get_filename(&base_path, rotation_time.clone(), date))
+                .open(Self::get_filename(&base_path, rotation_time, date))
                 .ok()
         } else {
             None
@@ -83,7 +83,7 @@ impl Write for LogFile {
                 .append(true)
                 .open(Self::get_filename(
                     &self.base_path,
-                    self.rotation_time.clone(),
+                    self.rotation_time,
                     self.date,
                 ))
                 .ok();

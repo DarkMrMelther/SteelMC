@@ -30,7 +30,6 @@ fn terminal_width() -> usize {
     terminal::size().map_or(80, |(w, _)| if w == 0 { 80 } else { w as usize })
 }
 /// Returns the terminal height, falling back to 30 rows if unavailable or 1 if it's <= 0.
-#[cfg(feature = "spawn_chunk_display")]
 fn terminal_height() -> usize {
     terminal::size().map_or(30, |(_, h)| if h == 0 { 30 } else { h as usize })
 }
@@ -96,7 +95,7 @@ impl CommandLogger {
                 biased;
                 Some((lvl, data)) = receiver.recv() => {
                     let (lvl, data) = self.write_log_entry(lvl, data).await;
-                    if self.log_config.as_ref().is_some_and(|l| l.file) {
+                    if self.log_config.as_ref().is_some_and(|l| l.log_file) {
                         self.write_file_entry(lvl, data).await;
                     }
                 }
@@ -107,9 +106,8 @@ impl CommandLogger {
 
     async fn write_log_entry(&self, lvl: Level, data: LogData) -> (Level, LogData) {
         let mut input = self.input.write().await;
-        let pos = input.out.get_current_pos();
 
-        if let Err(err) = input.out.cursor_to(pos, (0, 0)) {
+        if let Err(err) = input.out.cursor_to(0) {
             log::error!("{err}");
             return (lvl, data);
         }
@@ -128,7 +126,8 @@ impl CommandLogger {
             return (lvl, data);
         }
 
-        if let Err(err) = input.out.cursor_to((0, 0), pos) {
+        let pos = input.out.pos;
+        if let Err(err) = input.out.cursor_to_relative(pos) {
             log::error!("{err}");
         }
         if let Err(err) = input.rewrite_current_input() {

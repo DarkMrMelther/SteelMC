@@ -1,10 +1,11 @@
-use crossterm::cursor::{MoveDown, MoveLeft, MoveRight, MoveUp, SetCursorStyle::BlinkingBar};
+use crossterm::cursor::{MoveRight, SetCursorStyle::BlinkingBar};
 use std::io::{Result, Stdout, Write, stdout};
 
 pub struct Output {
     pub text: String,
     pub length: usize,
     pub pos: usize,
+    pub start: usize,
     pub replace: bool,
     out: Stdout,
 }
@@ -29,6 +30,7 @@ impl Output {
             text: String::new(),
             length: 0,
             pos: 0,
+            start: 0,
             replace: false,
             out,
         }
@@ -53,7 +55,6 @@ impl Output {
             .expect("Character position out of range!");
         (pos, char.len_utf8())
     }
-    pub const START_POS: (usize, usize) = (2, 0);
     pub fn get_pos(pos: usize) -> (usize, usize) {
         let w = super::terminal_width();
         let absolute_pos = pos + 2;
@@ -65,17 +66,18 @@ impl Output {
     pub fn get_end(&self) -> (usize, usize) {
         Self::get_pos(self.length)
     }
-    pub fn cursor_to(&mut self, from: (usize, usize), to: (usize, usize)) -> Result<()> {
-        if from.0 > to.0 {
-            write!(self.out, "{}", MoveLeft((from.0 - to.0) as u16))?;
-        } else if to.0 > from.0 {
-            write!(self.out, "{}", MoveRight((to.0 - from.0) as u16))?;
+    pub fn cursor_to(&mut self, to: usize) -> Result<()> {
+        if to > 0 {
+            write!(self.out, "\r{}", MoveRight(to as u16))
+        } else {
+            write!(self.out, "\r")
         }
-        if from.1 > to.1 {
-            write!(self.out, "{}", MoveUp((from.1 - to.1) as u16))?;
-        } else if to.1 > from.1 {
-            write!(self.out, "{}", MoveDown((to.1 - from.1) as u16))?;
-        }
-        Ok(())
+    }
+    pub fn cursor_to_relative(&mut self, to: usize) -> Result<()> {
+        write!(
+            self.out,
+            "\r{}",
+            MoveRight((to.saturating_sub(self.start) + 2) as u16)
+        )
     }
 }

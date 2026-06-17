@@ -1,6 +1,6 @@
 use crate::{
     SERVER,
-    logger::{Move, output::Output},
+    logger::{Move, output::Output, terminal_height},
 };
 use crossterm::{
     cursor::{MoveRight, MoveUp, RestorePosition, SavePosition},
@@ -34,7 +34,7 @@ impl Completer {
 /// Modify suggestions
 impl Completer {
     pub fn update(&mut self, out: &mut Output, pos: usize) {
-        let char_start = if out.text.is_empty() {
+        let char_start = if pos == 0 {
             0
         } else {
             let (start, size) = out.char_pos(pos.saturating_sub(1));
@@ -63,16 +63,17 @@ impl Completer {
             self.selected = 0;
             self.error = true;
         } else {
+            self.selected = self.selected.min(self.suggestions.len() - 1);
             self.error = false;
         }
     }
     pub fn rewrite(&mut self, out: &mut Output, dir: Move) -> Result<()> {
         // Goes to the end
-        out.cursor_to(out.get_current_pos(), out.get_end())?;
+        out.cursor_to_relative(out.length)?;
         // Clears
         write!(out, "{}", Clear(ClearType::FromCursorDown))?;
         if self.suggestions.is_empty() {
-            out.cursor_to(out.get_end(), out.get_current_pos())?;
+            out.cursor_to_relative(out.pos)?;
             out.flush()?;
             return Ok(());
         }
@@ -84,14 +85,16 @@ impl Completer {
             Move::Down => self.selected = (self.selected + 1) % len,
             Move::None => (),
         }
+
         // Updates the screen width
         let width = (super::terminal_width() / 20).max(1);
-        let grid_size = width * 3;
-        let start = (self.selected / grid_size) * grid_size;
+        let completion_height = 3.min(terminal_height().saturating_sub(4));
+        let grid_size = width * completion_height;
+        let start = (self.selected.checked_div(grid_size).unwrap_or(0)) * grid_size;
         let mut height = 0u16;
         'outer: for w in 0..width {
-            for h in 0..3 {
-                let pos = start + w * 3 + h;
+            for h in 0..completion_height {
+                let pos = start + w * completion_height + h;
                 if pos >= self.suggestions.len() {
                     break 'outer;
                 }
@@ -120,7 +123,9 @@ impl Completer {
                 )?;
                 height += 1;
             }
-            write!(out, "{}", MoveUp(3))?;
+            if completion_height != 0 {
+                write!(out, "{}", MoveUp(completion_height as u16))?;
+            }
             height = 0;
         }
         let y = height + out.get_end().1 as u16;
