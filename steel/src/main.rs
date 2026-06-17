@@ -1,10 +1,13 @@
 //! Main entry point for the Steel Minecraft server.
+#![feature(thread_id_value)]
 
 use std::num::NonZero;
 use std::path::Path;
 use std::sync::Arc;
-use std::thread;
+use std::{panic, thread};
 
+use crossterm::style::Attribute::{Bold, Reset};
+use crossterm::style::{Color, ResetColor, SetForegroundColor};
 use steel::config::{self, LogConfig};
 use steel::logger::CommandLogger;
 use steel::{SERVER, SteelServer, logger::LoggerLayer};
@@ -13,9 +16,9 @@ use steel_utils::text::DisplayResolutor;
 use text_components::fmt::set_display_resolutor;
 use tokio::runtime::{Builder, Runtime};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
-use tracing::Level;
 #[cfg(feature = "jaeger")]
 use tracing::Subscriber;
+use tracing::{Level, error};
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 #[cfg(feature = "jaeger")]
 use tracing_subscriber::{Layer, registry::LookupSpan};
@@ -152,6 +155,32 @@ async fn main_async(chunk_runtime: Arc<Runtime>) {
         }
     };
     let logger = init_tracing(cancel_token.clone(), steel_config.log.clone()).await;
+    let panic_token = cancel_token.clone();
+    panic::set_hook(Box::new(move |panic_info| {
+        let location = panic_info.location().expect("This cannot panic currently!");
+        let message = panic_info.payload_as_str().unwrap_or("Unknown");
+        let current_thread = thread::current();
+        let thread_name = current_thread.name().unwrap_or("unnamed");
+        let thread_id = current_thread.id();
+        error!(
+            "{}Thread '{thread_name}' ({}) has panicked at {}:{}:{}{}",
+            SetForegroundColor(Color::Red),
+            thread_id.as_u64(),
+            location.file(),
+            location.line(),
+            location.column(),
+            ResetColor
+        );
+        error!(
+            "{}{}[FATAL ERROR]{}{} {message}{}",
+            SetForegroundColor(Color::Red),
+            Bold,
+            Reset,
+            SetForegroundColor(Color::Red),
+            ResetColor
+        );
+        panic_token.cancel();
+    }));
 
     if let Err(error) = run_server(chunk_runtime, cancel_token, steel_config).await {
         log::error!("Server startup failed: {error}");
