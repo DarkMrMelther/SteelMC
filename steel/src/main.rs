@@ -1,12 +1,13 @@
 //! Main entry point for the Steel Minecraft server.
 #![feature(thread_id_value)]
 
+use std::backtrace::{Backtrace, BacktraceStatus};
 use std::num::NonZero;
 use std::path::Path;
 use std::sync::Arc;
 use std::{panic, thread};
 
-use crossterm::style::Attribute::{Bold, Reset};
+use crossterm::style::Attribute::{Bold, Dim, Reset};
 use crossterm::style::{Color, ResetColor, SetForegroundColor};
 use steel::config::{self, LogConfig};
 use steel::logger::CommandLogger;
@@ -179,6 +180,32 @@ async fn main_async(chunk_runtime: Arc<Runtime>) {
             SetForegroundColor(Color::Red),
             ResetColor
         );
+
+        let backtrace = Backtrace::capture();
+        match backtrace.status() {
+            BacktraceStatus::Captured => {
+                error!("Stack Backtrace:");
+                let string = backtrace.to_string();
+                let traces = string.split('\n');
+                for trace in traces {
+                    error!("{}", trace.trim_start());
+                }
+            }
+            BacktraceStatus::Disabled => {
+                error!(
+                    "{}Backtrace is disabled. Run with RUST_BACKTRACE=1 to enable it.{}",
+                    Dim, Reset
+                );
+            }
+            BacktraceStatus::Unsupported => {
+                error!(
+                    "{}Backtrace capability is not supported on this platform.{}",
+                    Dim, Reset
+                );
+            }
+            _ => {}
+        }
+
         panic_token.cancel();
     }));
 
