@@ -2794,6 +2794,7 @@ dependencies = [
  "chrono",
  "crossterm",
  "dhat",
+ "futures",
  "log",
  "mimalloc",
  "opentelemetry",

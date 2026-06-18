@@ -3,12 +3,14 @@
 
 use std::backtrace::{Backtrace, BacktraceStatus};
 use std::num::NonZero;
+use std::panic::AssertUnwindSafe;
 use std::path::Path;
 use std::sync::Arc;
 use std::{panic, thread};
 
 use crossterm::style::Attribute::{Bold, Dim, Reset};
 use crossterm::style::{Color, ResetColor, SetForegroundColor};
+use futures::FutureExt;
 use steel::config::{self, LogConfig};
 use steel::logger::CommandLogger;
 use steel::{SERVER, SteelServer, logger::LoggerLayer};
@@ -69,19 +71,22 @@ where
 async fn init_tracing(
     cancel_token: CancellationToken,
     log_config: Option<LogConfig>,
-) -> Arc<CommandLogger> {
+) -> Result<Arc<CommandLogger>, String> {
     let log_level = log_config
         .as_ref()
         .map_or(Level::INFO.into(), |l| l.log_level.to_directive());
-    let layer = LoggerLayer::new(cancel_token, log_config)
-        .await
-        .expect("Couldn't initialize the logger");
-    let logger = layer.0.clone();
 
-    let tracing = tracing_subscriber::registry().with(layer);
+    let tracing = tracing_subscriber::registry();
 
     #[cfg(feature = "jaeger")]
     let tracing = tracing.with(init_jaeger());
+
+    let layer = LoggerLayer::new(cancel_token, log_config)
+        .await
+        .map_err(|err| format!("failed to initialize logger: {err}"))?;
+    let logger = layer.0.clone();
+
+    let tracing = tracing.with(layer);
 
     let tracing = tracing.with(
         EnvFilter::builder()
@@ -90,8 +95,11 @@ async fn init_tracing(
     );
 
     set_display_resolutor(&DisplayResolutor);
-    tracing.init();
-    logger
+    if let Err(err) = tracing.try_init() {
+        logger.stop().await;
+        return Err(format!("failed to initialize tracing subscriber: {err}"));
+    }
+    Ok(logger)
 }
 
 #[cfg(feature = "dhat-heap")]
@@ -155,23 +163,37 @@ async fn main_async(chunk_runtime: Arc<Runtime>) {
             return;
         }
     };
-    let logger = init_tracing(cancel_token.clone(), steel_config.log.clone()).await;
+    let logger = match init_tracing(cancel_token.clone(), steel_config.log.clone()).await {
+        Ok(logger) => logger,
+        Err(error) => {
+            eprintln!("{error}");
+            return;
+        }
+    };
     let panic_token = cancel_token.clone();
     panic::set_hook(Box::new(move |panic_info| {
-        let location = panic_info.location().expect("This cannot panic currently!");
         let message = panic_info.payload_as_str().unwrap_or("Unknown");
         let current_thread = thread::current();
         let thread_name = current_thread.name().unwrap_or("unnamed");
         let thread_id = current_thread.id();
-        error!(
-            "{}Thread '{thread_name}' ({}) has panicked at {}:{}:{}{}",
-            SetForegroundColor(Color::Red),
-            thread_id.as_u64(),
-            location.file(),
-            location.line(),
-            location.column(),
-            ResetColor
-        );
+        if let Some(location) = panic_info.location() {
+            error!(
+                "{}Thread '{thread_name}' ({}) has panicked at {}:{}:{}{}",
+                SetForegroundColor(Color::Red),
+                thread_id.as_u64(),
+                location.file(),
+                location.line(),
+                location.column(),
+                ResetColor
+            );
+        } else {
+            error!(
+                "{}Thread '{thread_name}' ({}) has panicked at an unknown location{}",
+                SetForegroundColor(Color::Red),
+                thread_id.as_u64(),
+                ResetColor
+            );
+        }
         error!(
             "{}{}[FATAL ERROR]{}{} {message}{}",
             SetForegroundColor(Color::Red),
@@ -209,11 +231,23 @@ async fn main_async(chunk_runtime: Arc<Runtime>) {
         panic_token.cancel();
     }));
 
-    if let Err(error) = run_server(chunk_runtime, cancel_token, steel_config).await {
-        log::error!("Server startup failed: {error}");
-    }
+    let run_result = AssertUnwindSafe(run_server(chunk_runtime, cancel_token, steel_config))
+        .catch_unwind()
+        .await;
+    let panic_payload = match run_result {
+        Ok(Ok(())) => None,
+        Ok(Err(error)) => {
+            log::error!("Server startup failed: {error}");
+            None
+        }
+        Err(payload) => Some(payload),
+    };
 
     logger.stop().await;
+
+    if let Some(payload) = panic_payload {
+        panic::resume_unwind(payload);
+    }
 }
 
 async fn run_server(

@@ -48,6 +48,7 @@ pub struct CommandLogger {
     sender: mpsc::UnboundedSender<(Level, LogData)>,
     cancel_token: CancellationToken,
     stopped: CancellationToken,
+    log_stopped: CancellationToken,
     start_time: Instant,
     log_config: Option<LogConfig>,
 }
@@ -69,6 +70,7 @@ impl CommandLogger {
             sender,
             cancel_token: log_cancel_token.clone(),
             stopped: CancellationToken::new(),
+            log_stopped: CancellationToken::new(),
             start_time: Instant::now(),
             log_config,
         });
@@ -90,6 +92,13 @@ impl CommandLogger {
             let _ = disable_raw_mode();
             self.stopped.cancel();
         }
+        if timeout(time::Duration::from_secs(1), self.log_stopped.cancelled())
+            .await
+            .is_err()
+        {
+            eprintln!("Timed out waiting for logger to flush pending entries");
+            self.log_stopped.cancel();
+        }
     }
 
     async fn log_loop(self: Arc<Self>, mut receiver: mpsc::UnboundedReceiver<(Level, LogData)>) {
@@ -97,13 +106,24 @@ impl CommandLogger {
             tokio::select! {
                 biased;
                 Some((lvl, data)) = receiver.recv() => {
-                    let (lvl, data) = self.write_log_entry(lvl, data).await;
-                    if self.log_config.as_ref().is_some_and(|l| l.log_file) {
-                        self.write_file_entry(lvl, data).await;
-                    }
+                    self.write_entry(lvl, data).await;
                 }
-                () = self.cancel_token.cancelled() => break,
+                () = self.cancel_token.cancelled() => {
+                    while let Ok((lvl, data)) = receiver.try_recv() {
+                        self.write_entry(lvl, data).await;
+                    }
+                    self.flush_file().await;
+                    self.log_stopped.cancel();
+                    break;
+                }
             }
+        }
+    }
+
+    async fn write_entry(&self, lvl: Level, data: LogData) {
+        let (lvl, data) = self.write_log_entry(lvl, data).await;
+        if self.log_config.as_ref().is_some_and(|l| l.log_file) {
+            self.write_file_entry(lvl, data).await;
         }
     }
 
@@ -153,6 +173,13 @@ impl CommandLogger {
         ) {
             input.file.disable();
             eprintln!("Failed to write log file; disabling file logging: {err}");
+        }
+    }
+
+    async fn flush_file(&self) {
+        let mut input = self.input.write().await;
+        if let Err(err) = input.file.flush() {
+            eprintln!("Failed to flush log file: {err}");
         }
     }
 
