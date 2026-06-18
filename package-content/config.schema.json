@@ -220,7 +220,7 @@
         "log_level": {
           "type": "string",
           "description": "The level of information the logger will show",
-          "enum": ["off", "error", "warn", "info", "debug", "trace"],
+          "enum": ["error", "warn", "info", "debug", "trace"],
           "default": "info"
         },
         "time": {

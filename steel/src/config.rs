@@ -187,8 +187,6 @@ pub enum RotationTimeFormat {
 #[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum LogLevel {
-    /// No logs
-    Off,
     /// Only error logs
     Error,
     /// Error and warn logs
@@ -206,7 +204,6 @@ impl LogLevel {
     #[must_use]
     pub fn to_directive(self) -> Directive {
         match self {
-            LogLevel::Off => LevelFilter::OFF.into(),
             LogLevel::Error => LevelFilter::ERROR.into(),
             LogLevel::Warn => LevelFilter::WARN.into(),
             LogLevel::Info => LevelFilter::INFO.into(),

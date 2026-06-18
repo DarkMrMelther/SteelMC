@@ -111,6 +111,10 @@ impl LogFile {
             }
         }
     }
+
+    pub fn disable(&mut self) {
+        self.file = None;
+    }
 }
 
 impl Write for LogFile {

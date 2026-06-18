@@ -151,7 +151,8 @@ impl CommandLogger {
             "{time_str}{lvl:?} {module_path_str}{}{extra_str}",
             strip_ansi_escapes::strip_str(&data.message),
         ) {
-            log::error!("{err}");
+            input.file.disable();
+            eprintln!("Failed to write log file; disabling file logging: {err}");
         }
     }
 

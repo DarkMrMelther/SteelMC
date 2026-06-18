@@ -55,16 +55,8 @@ impl Output {
             .expect("Character position out of range!");
         (pos, char.len_utf8())
     }
-    pub fn get_pos(pos: usize) -> (usize, usize) {
-        let w = super::terminal_width();
-        let absolute_pos = pos + 2;
-        (absolute_pos % w, absolute_pos / w)
-    }
-    pub fn get_current_pos(&self) -> (usize, usize) {
-        Self::get_pos(self.pos)
-    }
-    pub fn get_end(&self) -> (usize, usize) {
-        Self::get_pos(self.length)
+    pub fn visible_input_width() -> usize {
+        super::terminal_width().saturating_sub(4).max(1)
     }
     pub fn cursor_to(&mut self, to: usize) -> Result<()> {
         if to > 0 {
@@ -74,10 +66,9 @@ impl Output {
         }
     }
     pub fn cursor_to_relative(&mut self, to: usize) -> Result<()> {
-        write!(
-            self.out,
-            "\r{}",
-            MoveRight((to.saturating_sub(self.start) + 2) as u16)
-        )
+        let visible_pos = to
+            .saturating_sub(self.start)
+            .min(Self::visible_input_width());
+        write!(self.out, "\r{}", MoveRight((visible_pos + 2) as u16))
     }
 }

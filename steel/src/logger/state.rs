@@ -4,7 +4,6 @@ use crate::logger::history::History;
 use crate::logger::output::Output;
 use crate::logger::selection::Selection;
 use crate::logger::suggestions::Completer;
-use crate::logger::terminal_width;
 use crate::{config::LogConfig, logger::Move};
 use crossterm::{
     style::{Attribute, Color, ResetColor, SetAttribute, SetForegroundColor},
@@ -157,7 +156,7 @@ impl LogState {
     pub fn rewrite_input(&mut self, length: usize, pos: usize) -> Result<()> {
         self.out.cursor_to(0)?;
 
-        let input_width = terminal_width().saturating_sub(4).max(1);
+        let input_width = Output::visible_input_width();
         if self.out.start > pos {
             self.out.start = (pos + 1).saturating_sub(input_width);
         } else if pos.saturating_sub(self.out.start) > input_width {
@@ -171,24 +170,24 @@ impl LogState {
             let end = range.end;
 
             let mut result = String::new();
-            let mut started = false;
-            let mut ended = false;
+            let mut highlighting = false;
 
             for (i, ch) in self.out.text.chars().enumerate() {
                 if !(i >= self.out.start && i < self.out.start + input_width) {
                     continue;
                 }
-                if i >= start && !started {
-                    started = true;
+                let selected = i >= start && i < end;
+                if selected && !highlighting {
+                    highlighting = true;
                     write!(result, "{}", SetAttribute(Attribute::Reverse)).ok();
                 }
-                if i == end {
-                    ended = true;
+                if !selected && highlighting {
+                    highlighting = false;
                     write!(result, "{}", SetAttribute(Attribute::NoReverse)).ok();
                 }
                 result.push(ch);
             }
-            if !ended {
+            if highlighting {
                 write!(result, "{}", SetAttribute(Attribute::NoReverse)).ok();
             }
             result

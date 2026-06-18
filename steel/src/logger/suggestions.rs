@@ -3,7 +3,7 @@ use crate::{
     logger::{Move, output::Output, terminal_height},
 };
 use crossterm::{
-    cursor::{MoveRight, MoveUp, RestorePosition, SavePosition},
+    cursor::{RestorePosition, SavePosition},
     style::{
         Color::{DarkGrey, Yellow},
         ResetColor, SetForegroundColor,
@@ -68,12 +68,14 @@ impl Completer {
         }
     }
     pub fn rewrite(&mut self, out: &mut Output, dir: Move) -> Result<()> {
-        // Goes to the end
-        out.cursor_to_relative(out.length)?;
-        // Clears
+        out.cursor_to_relative(out.pos)?;
+        if out.is_at_end() {
+            write!(out, "{}", Clear(ClearType::UntilNewLine))?;
+        }
+        write!(out, "{SavePosition}\r\n")?;
         write!(out, "{}", Clear(ClearType::FromCursorDown))?;
         if self.suggestions.is_empty() {
-            out.cursor_to_relative(out.pos)?;
+            write!(out, "{RestorePosition}")?;
             out.flush()?;
             return Ok(());
         }
@@ -90,18 +92,18 @@ impl Completer {
         let width = (super::terminal_width() / 20).max(1);
         let completion_height = 3.min(terminal_height().saturating_sub(4));
         let grid_size = width * completion_height;
+        if grid_size == 0 {
+            write!(out, "{RestorePosition}")?;
+            out.flush()?;
+            return Ok(());
+        }
         let start = (self.selected.checked_div(grid_size).unwrap_or(0)) * grid_size;
-        let mut height = 0u16;
-        'outer: for w in 0..width {
-            for h in 0..completion_height {
+        for h in 0..completion_height {
+            write!(out, "\r")?;
+            for w in 0..width {
                 let pos = start + w * completion_height + h;
                 if pos >= self.suggestions.len() {
-                    break 'outer;
-                }
-
-                writeln!(out, "\r")?;
-                if w != 0 {
-                    write!(out, "{}", MoveRight(w as u16 * 20))?;
+                    break;
                 }
 
                 let color = if pos == self.selected {
@@ -121,19 +123,12 @@ impl Completer {
                     },
                     ResetColor
                 )?;
-                height += 1;
             }
-            if completion_height != 0 {
-                write!(out, "{}", MoveUp(completion_height as u16))?;
+            if h + 1 < completion_height {
+                writeln!(out)?;
             }
-            height = 0;
         }
-        let y = height + out.get_end().1 as u16;
-        let x = out.get_current_pos().0;
-        if y != 0 {
-            write!(out, "{}", MoveUp(y))?;
-        }
-        write!(out, "\r{}", MoveRight(x as u16))?;
+        write!(out, "{RestorePosition}")?;
 
         let char_pos = if out.is_at_start() {
             0
