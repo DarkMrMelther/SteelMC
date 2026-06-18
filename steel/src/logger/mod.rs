@@ -57,14 +57,15 @@ impl CommandLogger {
     pub async fn init(
         cancel_token: CancellationToken,
         log_config: Option<LogConfig>,
-    ) -> Option<Arc<Self>> {
+    ) -> Result<Arc<Self>, String> {
         let (sender, receiver) = mpsc::unbounded_channel();
         let log_cancel_token = CancellationToken::new();
+        let input = LogState::new(log_config.as_ref(), cancel_token)
+            .await
+            .map_err(|err| format!("failed to initialize logger state: {err}"))?;
 
         let log = Arc::new(Self {
-            input: Arc::new(AsyncRwLock::const_new(
-                LogState::new(log_config.as_ref(), cancel_token).await,
-            )),
+            input: Arc::new(AsyncRwLock::const_new(input)),
             sender,
             cancel_token: log_cancel_token.clone(),
             stopped: CancellationToken::new(),
@@ -73,8 +74,10 @@ impl CommandLogger {
         });
         task::spawn(log.clone().log_loop(receiver));
         task::spawn(log.clone().input_main());
-        STEEL_LOGGER.set(log.clone()).ok()?;
-        Some(log)
+        STEEL_LOGGER
+            .set(log.clone())
+            .map_err(|_| "Steel logger is already initialized".to_string())?;
+        Ok(log)
     }
 
     /// Stops the logger and waits for cleanup to complete
@@ -215,8 +218,8 @@ impl LoggerLayer {
     pub async fn new(
         cancel_token: CancellationToken,
         log_config: Option<LogConfig>,
-    ) -> Option<Self> {
-        Some(Self(CommandLogger::init(cancel_token, log_config).await?))
+    ) -> Result<Self, String> {
+        Ok(Self(CommandLogger::init(cancel_token, log_config).await?))
     }
 }
 

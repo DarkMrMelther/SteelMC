@@ -10,11 +10,11 @@ use crossterm::{
     style::{Attribute, Color, ResetColor, SetAttribute, SetForegroundColor},
     terminal::{Clear, ClearType},
 };
-use std::fs::create_dir_all;
-use std::path::Path;
 use std::{
     fmt::Write as _,
+    fs::create_dir_all,
     io::{Result, Write},
+    path::PathBuf,
 };
 use tokio_util::sync::CancellationToken;
 
@@ -28,26 +28,28 @@ pub struct LogState {
 }
 
 impl LogState {
-    pub async fn new(log_config: Option<&LogConfig>, cancel_token: CancellationToken) -> Self {
-        let path = log_config.map_or(String::from("./.tmp"), |l| {
-            l.log_path.trim_end_matches('/').to_string()
-        });
+    pub async fn new(
+        log_config: Option<&LogConfig>,
+        cancel_token: CancellationToken,
+    ) -> Result<Self> {
+        let path = log_config.map_or_else(
+            || PathBuf::from("./.tmp"),
+            |log_config| PathBuf::from(&log_config.log_path),
+        );
         let rotation_time = log_config.map_or(RotationTimeFormat::None, |l| l.rotation_time);
         let log_enabled = log_config.is_some_and(|l| l.log_file);
         let max_history = log_config.map_or(50, |l| l.max_history);
 
-        if !Path::new(&path).exists() {
-            create_dir_all(&path).unwrap_or_else(|_| panic!("Can't make the logs folder ({path})"));
-        }
+        create_dir_all(&path)?;
 
-        LogState {
+        Ok(LogState {
             out: Output::new(),
             completion: Completer::new(),
             history: History::new(path.clone(), max_history).await,
             selection: Selection::new(),
             cancel_token,
-            file: LogFile::new(path, rotation_time, log_enabled),
-        }
+            file: LogFile::new(path, rotation_time, log_enabled)?,
+        })
     }
 }
 
@@ -155,7 +157,7 @@ impl LogState {
     pub fn rewrite_input(&mut self, length: usize, pos: usize) -> Result<()> {
         self.out.cursor_to(0)?;
 
-        let input_width = terminal_width() - 4;
+        let input_width = terminal_width().saturating_sub(4).max(1);
         if self.out.start > pos {
             self.out.start = (pos + 1).saturating_sub(input_width);
         } else if pos.saturating_sub(self.out.start) > input_width {

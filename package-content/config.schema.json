@@ -214,7 +214,7 @@
       "properties": {
         "log_path": {
           "type": "string",
-          "description": "Whether the log should be written into a file",
+          "description": "Path where store the log files and history",
           "default": "./.logs"
         },
         "log_level": {
@@ -257,7 +257,6 @@
           "minimum": 1
         }
       },
-      "required": ["log_path", "log_level", "time", "module_path", "extra", "log_file", "rotation_time", "max_history"],
       "additionalProperties": false
     }
   },

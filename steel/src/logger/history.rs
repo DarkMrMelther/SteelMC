@@ -1,16 +1,16 @@
 use crate::logger::{LogState, Move};
-use std::{borrow::Cow, collections::VecDeque, io::Result};
+use std::{borrow::Cow, collections::VecDeque, io::Result, path::PathBuf};
 use tokio::{fs, io::AsyncWriteExt};
 
 pub struct History {
-    pub path: String,
+    pub path: PathBuf,
     pub values: VecDeque<Cow<'static, str>>,
     pub pos: usize,
     pub max: usize,
 }
 impl History {
-    pub async fn new(path: String, max: usize) -> Self {
-        let file_path = format!("{path}/history.txt");
+    pub async fn new(path: PathBuf, max: usize) -> Self {
+        let file_path = path.join("history.txt");
         let values = if let Ok(true) = fs::try_exists(&file_path).await {
             fs::read_to_string(file_path).await.map_or_else(
                 |err| {
@@ -69,7 +69,7 @@ impl History {
     }
     pub async fn save(&self) -> Result<()> {
         fs::create_dir_all(&self.path).await?;
-        let path = format!("{}/history.txt", self.path);
+        let path = self.path.join("history.txt");
         if let Ok(true) = fs::try_exists(&path).await {
             fs::remove_file(&path).await?;
         }
