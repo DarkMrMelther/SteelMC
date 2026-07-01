@@ -34,7 +34,7 @@ impl BuddingAmethystBlock {
 
     fn can_cluster_grow_at_state(state: BlockStateId, block_id: usize) -> bool {
         state.is_air()
-            || (block_id == vanilla_blocks::WATER.id() && state.get_fluid_state().is_source())
+            || (block_id == vanilla_blocks::WATER.id() && state.get_fluid_state().is_full())
     }
 
     fn check_cluster(
@@ -118,7 +118,9 @@ impl BlockBehavior for BuddingAmethystBlock {
 mod tests {
     use super::*;
     use crate::behavior::init_behaviors;
-    use steel_registry::test_support::init_test_registry;
+    use steel_registry::{
+        blocks::properties::BlockStateProperties, test_support::init_test_registry,
+    };
 
     #[test]
     fn growth_state_waterlogs_when_replacing_water_block() {
@@ -132,5 +134,35 @@ mod tests {
         );
 
         assert!(state.get_value(WATERLOGGED));
+    }
+
+    #[test]
+    fn cluster_can_grow_in_falling_full_water() {
+        init_test_registry();
+        init_behaviors();
+
+        let falling_full_water = vanilla_blocks::WATER
+            .default_state()
+            .set_value(&BlockStateProperties::LEVEL, 8);
+
+        assert!(BuddingAmethystBlock::can_cluster_grow_at_state(
+            falling_full_water,
+            vanilla_blocks::WATER.id()
+        ));
+    }
+
+    #[test]
+    fn cluster_cannot_grow_in_partial_flowing_water() {
+        init_test_registry();
+        init_behaviors();
+
+        let partial_flowing_water = vanilla_blocks::WATER
+            .default_state()
+            .set_value(&BlockStateProperties::LEVEL, 1);
+
+        assert!(!BuddingAmethystBlock::can_cluster_grow_at_state(
+            partial_flowing_water,
+            vanilla_blocks::WATER.id()
+        ));
     }
 }
