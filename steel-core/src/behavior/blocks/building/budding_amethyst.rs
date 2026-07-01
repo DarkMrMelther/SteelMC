@@ -1,5 +1,6 @@
 use crate::{
     behavior::{BlockBehavior, BlockPlaceContext, BlockStateBehaviorExt},
+    fluid::FluidStateExt as _,
     world::World,
 };
 use std::sync::Arc;
@@ -43,6 +44,17 @@ impl BuddingAmethystBlock {
         block: BlockRef,
     ) -> bool {
         block_id == block.id() && state.get_value(FACING) == direction
+    }
+
+    fn growth_state(
+        block: BlockRef,
+        replaced_state: BlockStateId,
+        direction: Direction,
+    ) -> BlockStateId {
+        block
+            .default_state()
+            .set_value(FACING, direction)
+            .set_value(WATERLOGGED, replaced_state.get_fluid_state().is_water())
     }
 }
 
@@ -94,16 +106,31 @@ impl BlockBehavior for BuddingAmethystBlock {
             }
 
             if let Some(growth_stage) = growth_stage {
-                let block_state = growth_stage
-                    .default_state()
-                    .set_value(FACING, direction)
-                    .set_value(
-                        WATERLOGGED,
-                        state.try_get_value(WATERLOGGED).unwrap_or(false),
-                    );
+                let block_state = Self::growth_state(growth_stage, state, direction);
                 world.set_block(grow_pos, block_state, UpdateFlags::UPDATE_ALL);
             }
         }
     }
     // TODO: OnProjectile hit from AmethystBlock inheritance
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::behavior::init_behaviors;
+    use steel_registry::test_support::init_test_registry;
+
+    #[test]
+    fn growth_state_waterlogs_when_replacing_water_block() {
+        init_test_registry();
+        init_behaviors();
+
+        let state = BuddingAmethystBlock::growth_state(
+            &vanilla_blocks::SMALL_AMETHYST_BUD,
+            vanilla_blocks::WATER.default_state(),
+            Direction::Up,
+        );
+
+        assert!(state.get_value(WATERLOGGED));
+    }
 }

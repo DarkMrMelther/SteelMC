@@ -9,6 +9,7 @@ use crate::{
         blocks::{WeatherState, WeatheringCopper},
     },
     entity::Entity,
+    entity::ai::path::PathComputationType,
     player::Player,
     world::{LevelReader, ScheduledTickAccess, World, game_event_context::GameEventContext},
 };
@@ -31,9 +32,9 @@ pub struct TrapDoorBlock {
     block: BlockRef,
     #[json_arg(value, json = "type_can_open_by_hand")]
     can_open_by_hand: bool,
-    #[json_arg(sound_events, json = "type_door_open")]
+    #[json_arg(sound_events, json = "type_trapdoor_open")]
     sound_open: SoundEventRef,
-    #[json_arg(sound_events, json = "type_door_close")]
+    #[json_arg(sound_events, json = "type_trapdoor_close")]
     sound_close: SoundEventRef,
 }
 /// Behavior for vanilla copper trapdoor blocks.
@@ -45,9 +46,9 @@ pub struct WeatheringCopperTrapDoorBlock {
     pub weathering: WeatheringCopper,
     #[json_arg(value, json = "type_can_open_by_hand")]
     can_open_by_hand: bool,
-    #[json_arg(sound_events, json = "type_door_open")]
+    #[json_arg(sound_events, json = "type_trapdoor_open")]
     sound_open: SoundEventRef,
-    #[json_arg(sound_events, json = "type_door_close")]
+    #[json_arg(sound_events, json = "type_trapdoor_close")]
     sound_close: SoundEventRef,
 }
 
@@ -85,7 +86,8 @@ impl TrapDoorBlock {
         } else {
             self.sound_close
         };
-        world.play_block_sound(sound, pos, 1.0, 1.0, player.map(Entity::id));
+        let pitch = rand::random::<f32>() * 0.1 + 0.9;
+        world.play_block_sound(sound, pos, 1.0, pitch, player.map(Entity::id));
         world.game_event(
             if open {
                 &vanilla_game_events::BLOCK_OPEN
@@ -119,10 +121,10 @@ impl BlockBehavior for TrapDoorBlock {
     fn get_state_for_placement(&self, context: &BlockPlaceContext<'_>) -> Option<BlockStateId> {
         let mut state = self.block.default_state();
         let face = context.clicked_face;
-        if !context.replace_clicked && face.is_horizontal() {
+        if !context.replaces_clicked_block && face.is_horizontal() {
             state = state.set_value(FACING, face).set_value(
                 HALF,
-                if context.click_location.y - f64::from(context.clicked_pos.y()) > 0.5 {
+                if context.click_location.y - f64::from(context.place_pos.y()) > 0.5 {
                     Half::Top
                 } else {
                     Half::Bottom
@@ -141,7 +143,7 @@ impl BlockBehavior for TrapDoorBlock {
                 );
         }
 
-        if Self::has_neighbor_signal(context.world, context.clicked_pos) {
+        if Self::has_neighbor_signal(context.world, context.place_pos) {
             state = state.set_value(OPEN, true).set_value(POWERED, true);
         }
 
@@ -203,6 +205,13 @@ impl BlockBehavior for TrapDoorBlock {
         if state.get_value(WATERLOGGED) {
             let delay = world.fluid_tick_delay(&vanilla_fluids::WATER);
             let _ = world.schedule_fluid_tick_default(pos, &vanilla_fluids::WATER, delay);
+        }
+    }
+
+    fn is_pathfindable(&self, state: BlockStateId, computation_type: PathComputationType) -> bool {
+        match computation_type {
+            PathComputationType::Land | PathComputationType::Air => state.get_value(OPEN),
+            PathComputationType::Water => state.get_value(WATERLOGGED),
         }
     }
 }
@@ -279,11 +288,62 @@ impl BlockBehavior for WeatheringCopperTrapDoorBlock {
             .handle_neighbor_changed(state, world, pos, source_block, moved_by_piston);
     }
 
+    fn is_pathfindable(&self, state: BlockStateId, computation_type: PathComputationType) -> bool {
+        self.trapdoor().is_pathfindable(state, computation_type)
+    }
+
     fn is_randomly_ticking(&self, _state: BlockStateId) -> bool {
         self.weathering.is_randomly_ticking()
     }
 
     fn random_tick(&self, state: BlockStateId, world: &Arc<World>, pos: BlockPos) {
         self.weathering.change_over_time(state, world, pos);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use steel_registry::{
+        blocks::properties::BlockStateProperties, sound_events, test_support::init_test_registry,
+        vanilla_blocks,
+    };
+
+    #[test]
+    fn closed_trapdoor_is_not_land_or_air_pathfindable() {
+        init_test_registry();
+        let behavior = TrapDoorBlock::new(
+            &vanilla_blocks::OAK_TRAPDOOR,
+            true,
+            &sound_events::BLOCK_WOODEN_TRAPDOOR_OPEN,
+            &sound_events::BLOCK_WOODEN_TRAPDOOR_CLOSE,
+        );
+        let state = vanilla_blocks::OAK_TRAPDOOR
+            .default_state()
+            .set_value(&BlockStateProperties::OPEN, false)
+            .set_value(&BlockStateProperties::WATERLOGGED, false);
+
+        assert!(!behavior.is_pathfindable(state, PathComputationType::Land));
+        assert!(!behavior.is_pathfindable(state, PathComputationType::Air));
+        assert!(!behavior.is_pathfindable(state, PathComputationType::Water));
+    }
+
+    #[test]
+    fn open_waterlogged_trapdoor_matches_vanilla_pathfinding() {
+        init_test_registry();
+        let behavior = TrapDoorBlock::new(
+            &vanilla_blocks::OAK_TRAPDOOR,
+            true,
+            &sound_events::BLOCK_WOODEN_TRAPDOOR_OPEN,
+            &sound_events::BLOCK_WOODEN_TRAPDOOR_CLOSE,
+        );
+        let state = vanilla_blocks::OAK_TRAPDOOR
+            .default_state()
+            .set_value(&BlockStateProperties::OPEN, true)
+            .set_value(&BlockStateProperties::WATERLOGGED, true);
+
+        assert!(behavior.is_pathfindable(state, PathComputationType::Land));
+        assert!(behavior.is_pathfindable(state, PathComputationType::Air));
+        assert!(behavior.is_pathfindable(state, PathComputationType::Water));
     }
 }
