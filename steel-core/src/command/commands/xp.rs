@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
 
 use crate::{
@@ -32,7 +32,7 @@ pub fn command_handler() -> impl CommandHandlerDyn {
                         for player in players {
                             let points = { player.experience.lock().points() };
                             ctx.sender.send_message(
-                                &translations::COMMANDS_EXPERIENCE_QUERY_POINTS
+                                &vanilla_translations::COMMANDS_EXPERIENCE_QUERY_POINTS
                                     .message([
                                         TextComponent::from(player.gameprofile.name.clone()),
                                         TextComponent::from(points.to_string()),
@@ -48,7 +48,7 @@ pub fn command_handler() -> impl CommandHandlerDyn {
                         for player in players {
                             let level = { player.experience.lock().level() };
                             ctx.sender.send_message(
-                                &translations::COMMANDS_EXPERIENCE_QUERY_LEVELS
+                                &vanilla_translations::COMMANDS_EXPERIENCE_QUERY_LEVELS
                                     .message([
                                         TextComponent::from(player.gameprofile.name.clone()),
                                         TextComponent::from(level.to_string()),
@@ -156,8 +156,8 @@ fn set_experience(
 
     if let [player] = players.as_slice() {
         let translation = match xp_type {
-            ExperienceType::Points => &translations::COMMANDS_EXPERIENCE_SET_POINTS_SUCCESS_SINGLE,
-            ExperienceType::Levels => &translations::COMMANDS_EXPERIENCE_SET_LEVELS_SUCCESS_SINGLE,
+            ExperienceType::Points => &vanilla_translations::COMMANDS_EXPERIENCE_SET_POINTS_SUCCESS_SINGLE,
+            ExperienceType::Levels => &vanilla_translations::COMMANDS_EXPERIENCE_SET_LEVELS_SUCCESS_SINGLE,
         };
 
         ctx.sender.send_message(
@@ -171,10 +171,10 @@ fn set_experience(
     } else {
         let translation = match xp_type {
             ExperienceType::Points => {
-                &translations::COMMANDS_EXPERIENCE_SET_POINTS_SUCCESS_MULTIPLE
+                &vanilla_translations::COMMANDS_EXPERIENCE_SET_POINTS_SUCCESS_MULTIPLE
             }
             ExperienceType::Levels => {
-                &translations::COMMANDS_EXPERIENCE_SET_LEVELS_SUCCESS_MULTIPLE
+                &vanilla_translations::COMMANDS_EXPERIENCE_SET_LEVELS_SUCCESS_MULTIPLE
             }
         };
 
@@ -207,8 +207,8 @@ fn add_experience(
 
     if let [player] = players.as_slice() {
         let translation = match xp_type {
-            ExperienceType::Points => &translations::COMMANDS_EXPERIENCE_ADD_POINTS_SUCCESS_SINGLE,
-            ExperienceType::Levels => &translations::COMMANDS_EXPERIENCE_ADD_LEVELS_SUCCESS_SINGLE,
+            ExperienceType::Points => &vanilla_translations::COMMANDS_EXPERIENCE_ADD_POINTS_SUCCESS_SINGLE,
+            ExperienceType::Levels => &vanilla_translations::COMMANDS_EXPERIENCE_ADD_LEVELS_SUCCESS_SINGLE,
         };
 
         ctx.sender.send_message(
@@ -222,10 +222,10 @@ fn add_experience(
     } else {
         let translation = match xp_type {
             ExperienceType::Points => {
-                &translations::COMMANDS_EXPERIENCE_ADD_POINTS_SUCCESS_MULTIPLE
+                &vanilla_translations::COMMANDS_EXPERIENCE_ADD_POINTS_SUCCESS_MULTIPLE
             }
             ExperienceType::Levels => {
-                &translations::COMMANDS_EXPERIENCE_ADD_LEVELS_SUCCESS_MULTIPLE
+                &vanilla_translations::COMMANDS_EXPERIENCE_ADD_LEVELS_SUCCESS_MULTIPLE
             }
         };
 

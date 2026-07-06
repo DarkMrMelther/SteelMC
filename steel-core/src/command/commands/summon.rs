@@ -6,9 +6,10 @@ use std::sync::Arc;
 use glam::DVec3;
 use steel_registry::entity_type::EntityTypeRef;
 use steel_utils::types::Difficulty;
-use steel_utils::{BlockPos, translations};
+use steel_utils::{BlockPos, };
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
-use text_components::translation::TranslatedMessage;
+use text_components::translation::TranslatedContent;
 
 use crate::command::arguments::entity_type::EntitySummonArgument;
 use crate::command::arguments::vector3::Vector3Argument;
@@ -68,7 +69,7 @@ fn summon_entity(
 ) -> Result<(), CommandError> {
     let entity = create_entity(context, entity_type, pos)?;
     context.sender.send_message(
-        &translations::COMMANDS_SUMMON_SUCCESS
+        &vanilla_translations::COMMANDS_SUMMON_SUCCESS
             .message([entity_display_name(entity.as_ref())])
             .into(),
     );
@@ -83,20 +84,20 @@ fn create_entity(
     let block_pos = BlockPos::containing(pos.x, pos.y, pos.z);
     if !World::is_in_spawnable_bounds(block_pos) {
         return Err(command_failed(
-            translations::COMMANDS_SUMMON_INVALID_POSITION.msg(),
+            vanilla_translations::COMMANDS_SUMMON_INVALID_POSITION.msg(),
         ));
     }
 
     if context.world.difficulty() == Difficulty::Peaceful && !entity_type.allowed_in_peaceful {
         return Err(command_failed(
-            translations::COMMANDS_SUMMON_FAILED_PEACEFUL.msg(),
+            vanilla_translations::COMMANDS_SUMMON_FAILED_PEACEFUL.msg(),
         ));
     }
 
     let world = Arc::clone(&context.world);
     let Some(entity) = ENTITIES.create(entity_type, next_entity_id(), pos, Arc::downgrade(&world))
     else {
-        return Err(command_failed(translations::COMMANDS_SUMMON_FAILED.msg()));
+        return Err(command_failed(vanilla_translations::COMMANDS_SUMMON_FAILED.msg()));
     };
 
     if let Some(mob) = entity.as_mob() {
@@ -106,13 +107,13 @@ fn create_entity(
     match world.try_add_entity(Arc::clone(&entity)) {
         Ok(()) => Ok(entity),
         Err(AddEntityError::DuplicateUuid { .. }) => Err(command_failed(
-            translations::COMMANDS_SUMMON_FAILED_UUID.msg(),
+            vanilla_translations::COMMANDS_SUMMON_FAILED_UUID.msg(),
         )),
-        Err(_) => Err(command_failed(translations::COMMANDS_SUMMON_FAILED.msg())),
+        Err(_) => Err(command_failed(vanilla_translations::COMMANDS_SUMMON_FAILED.msg())),
     }
 }
 
-fn command_failed(message: TranslatedMessage) -> CommandError {
+fn command_failed(message: TranslatedContent<'static>) -> CommandError {
     CommandError::CommandFailed(Box::new(message.into()))
 }
 
@@ -123,7 +124,7 @@ fn entity_display_name(entity: &dyn Entity) -> TextComponent {
 }
 
 fn entity_type_display_name(entity_type: EntityTypeRef) -> TextComponent {
-    TextComponent::translated(TranslatedMessage {
+    TextComponent::translated(TranslatedContent {
         key: Cow::Owned(format!(
             "entity.{}.{}",
             entity_type.key.namespace, entity_type.key.path

@@ -10,7 +10,11 @@ pub struct CSystemChat {
 }
 
 impl CSystemChat {
-    pub fn new<T: TextResolutor>(content: &TextComponent, overlay: bool, player: &T) -> Self {
+    pub fn new<T: for<'a> TextResolutor<'a>>(
+        content: &TextComponent,
+        overlay: bool,
+        player: &T,
+    ) -> Self {
         Self {
             content: content.resolve(player),
             overlay,

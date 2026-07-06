@@ -5,7 +5,7 @@ use crate::command::commands::{
 };
 use crate::command::context::CommandContext;
 use crate::command::error::CommandError;
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 
 /// Handler for the "weather" command.
 #[must_use]
@@ -71,17 +71,17 @@ impl CommandExecutor<((), i32)> for WeatherCommandExecutor {
             WeatherCommandExecutor::Clear => {
                 context
                     .sender
-                    .send_message(&translations::COMMANDS_WEATHER_SET_CLEAR.msg().into());
+                    .send_message(&vanilla_translations::COMMANDS_WEATHER_SET_CLEAR.msg().into());
             }
             WeatherCommandExecutor::Rain => {
                 context
                     .sender
-                    .send_message(&translations::COMMANDS_WEATHER_SET_RAIN.msg().into());
+                    .send_message(&vanilla_translations::COMMANDS_WEATHER_SET_RAIN.msg().into());
             }
             WeatherCommandExecutor::Thunder => {
                 context
                     .sender
-                    .send_message(&translations::COMMANDS_WEATHER_SET_THUNDER.msg().into());
+                    .send_message(&vanilla_translations::COMMANDS_WEATHER_SET_THUNDER.msg().into());
             }
         }
 

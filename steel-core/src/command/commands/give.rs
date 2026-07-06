@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use steel_registry::{data_components::vanilla_components, item_stack::ItemStack, items::ItemRef};
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::{Modifier, TextComponent, interactivity::HoverEvent};
 
 use crate::{
@@ -59,7 +59,7 @@ fn give(targets: &Vec<Arc<Player>>, item: ItemRef, count: i32, sender: &CommandS
 
     if count > max_stack_size * 100 {
         sender.send_message(
-            &translations::COMMANDS_GIVE_FAILED_TOOMANYITEMS
+            &vanilla_translations::COMMANDS_GIVE_FAILED_TOOMANYITEMS
                 .message([
                     TextComponent::from(format!("{}", max_stack_size * 100)),
                     TextComponent::from(format!("[{}]", item.key.path)).hover_event(
@@ -91,7 +91,7 @@ fn give(targets: &Vec<Arc<Player>>, item: ItemRef, count: i32, sender: &CommandS
 
     if targets.len() == 1 {
         sender.send_message(
-            &translations::COMMANDS_GIVE_SUCCESS_SINGLE
+            &vanilla_translations::COMMANDS_GIVE_SUCCESS_SINGLE
                 .message([
                     TextComponent::from(format!("{count}")),
                     TextComponent::from(format!("[{}]", item.key.path)).hover_event(
@@ -111,7 +111,7 @@ fn give(targets: &Vec<Arc<Player>>, item: ItemRef, count: i32, sender: &CommandS
         );
     } else {
         sender.send_message(
-            &translations::COMMANDS_GIVE_SUCCESS_MULTIPLE
+            &vanilla_translations::COMMANDS_GIVE_SUCCESS_MULTIPLE
                 .message([
                     TextComponent::from(format!("{count}")),
                     TextComponent::from(format!("[{}]", item.key.path)).hover_event(

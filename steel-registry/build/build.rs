@@ -1,4 +1,5 @@
 use std::{env, fs, path::Path, process::Command};
+use text_components::build::build_translations;
 
 mod attributes;
 mod banner_patterns;
@@ -144,6 +145,7 @@ const WORLD_CLOCKS: &str = "world_clocks";
 const CARVERS: &str = "configured_carvers";
 const CONFIGURED_FEATURES: &str = "configured_features";
 const PLACED_FEATURES: &str = "placed_features";
+const TRANSLATIONS: &str = "translations";
 
 pub fn main() {
     // Rerun build script when any file in the build/ directory changes
@@ -228,6 +230,7 @@ pub fn main() {
         (carvers::build(), CARVERS),
         (features::build_configured(), CONFIGURED_FEATURES),
         (features::build_placed(), PLACED_FEATURES),
+        (build_translations("../steel-utils/build_assets/en_us.json"), TRANSLATIONS),
     ];
 
     // Track which files we're generating this run

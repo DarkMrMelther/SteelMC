@@ -15,7 +15,7 @@ use crate::entity::damage::DamageSource;
 use crate::entity::{Entity, LivingEntity};
 use crate::player::Player;
 use steel_registry::vanilla_damage_types;
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 
 /// Creates the `/kill` command handler.
 #[must_use]
@@ -46,7 +46,7 @@ impl CommandExecutor<()> for KillSelfExecutor {
 
         // TODO: use getDisplayName() (team formatting, hover event, UUID insertion)
         context.sender.send_message(
-            &translations::COMMANDS_KILL_SUCCESS_SINGLE
+            &vanilla_translations::COMMANDS_KILL_SUCCESS_SINGLE
                 .message([TextComponent::plain(player.gameprofile.name.clone())])
                 .into(),
         );
@@ -94,13 +94,13 @@ impl CommandExecutor<((), Vec<Arc<dyn LivingEntity + Send + Sync>>)> for KillTar
         // TODO: use getDisplayName() (team formatting, hover event, UUID insertion)
         if victim_count == 1 {
             context.sender.send_message(
-                &translations::COMMANDS_KILL_SUCCESS_SINGLE
+                &vanilla_translations::COMMANDS_KILL_SUCCESS_SINGLE
                     .message([TextComponent::plain(last_name)])
                     .into(),
             );
         } else {
             context.sender.send_message(
-                &translations::COMMANDS_KILL_SUCCESS_MULTIPLE
+                &vanilla_translations::COMMANDS_KILL_SUCCESS_MULTIPLE
                     .message([TextComponent::plain(victim_count.to_string())])
                     .into(),
             );

@@ -1,6 +1,8 @@
 #![feature(const_trait_impl, const_cmp, derive_const)]
 
 use crate::game_events::GameEventRegistry;
+use crate::text_content::TextContentRegistry;
+use crate::translation::TranslationRegistry;
 use crate::world_clock::WorldClockRegistry;
 use crate::{
     attribute::AttributeRegistry,
@@ -102,7 +104,9 @@ pub mod structure;
 pub mod structure_processor;
 pub mod structure_set;
 pub mod template_pool;
+pub mod text_content;
 pub mod timeline;
+pub mod translation;
 pub mod trim_material;
 pub mod trim_pattern;
 pub mod villager_profession;
@@ -451,6 +455,11 @@ pub mod vanilla_configured_features;
 #[path = "generated/vanilla_placed_features.rs"]
 pub mod vanilla_placed_features;
 
+#[expect(warnings)]
+#[rustfmt::skip]
+#[path = "generated/vanilla_translations.rs"]
+pub mod vanilla_translations;
+
 pub struct RegistryLock(OnceLock<Registry>);
 
 impl RegistryLock {
@@ -577,6 +586,8 @@ pub const PLACED_FEATURE_REGISTRY: Identifier =
 pub const STRUCTURE_REGISTRY: Identifier = Identifier::vanilla_static("worldgen/structure");
 pub const STRUCTURE_PROCESSOR_LIST_REGISTRY: Identifier =
     Identifier::vanilla_static("worldgen/processor_list");
+pub const TRANSLATION_REGISTRY: Identifier = Identifier::new_static("steel", "translation");
+pub const TEXT_CONTENT_REGISTRY: Identifier = Identifier::new_static("steel", "text_content");
 
 pub struct Registry {
     pub attributes: AttributeRegistry,
@@ -629,6 +640,8 @@ pub struct Registry {
     pub placed_features: PlacedFeatureRegistry,
     pub structures: StructureRegistry,
     pub structure_processors: StructureProcessorListRegistry,
+    pub translations: TranslationRegistry,
+    pub text_contents: TextContentRegistry,
 }
 
 impl Debug for Registry {
@@ -741,6 +754,7 @@ impl Registry {
             &mut registry.configured_features,
         );
         vanilla_placed_features::register_placed_features(&mut registry.placed_features);
+        vanilla_translations::register_translations(&mut registry.translations);
 
         registry
     }
@@ -798,6 +812,8 @@ impl Registry {
         self.placed_features.freeze();
         self.structures.freeze();
         self.structure_processors.freeze();
+        self.translations.freeze();
+        self.text_contents.freeze();
     }
 
     fn validate_references(&self) {
@@ -996,6 +1012,8 @@ impl Registry {
             placed_features: PlacedFeatureRegistry::new(),
             structures: StructureRegistry::new(),
             structure_processors: StructureProcessorListRegistry::new(),
+            translations: TranslationRegistry::new(),
+            text_contents: TextContentRegistry::new(),
         }
     }
 }

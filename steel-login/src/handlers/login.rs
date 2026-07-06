@@ -8,7 +8,7 @@ use steel_protocol::{
     packets::login::{CHello, CLoginCompression, CLoginFinished, SHello, SKey},
     utils::ConnectionProtocol,
 };
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
 
 use crate::{
@@ -143,17 +143,17 @@ impl JavaTcpClient {
                 Err(error) => {
                     self.kick(match error {
                         AuthError::FailedResponse => TextComponent::translated(
-                            translations::MULTIPLAYER_DISCONNECT_AUTHSERVERS_DOWN.msg(),
+                            vanilla_translations::MULTIPLAYER_DISCONNECT_AUTHSERVERS_DOWN.msg(),
                         ),
                         AuthError::UnverifiedUsername => TextComponent::translated(
-                            translations::MULTIPLAYER_DISCONNECT_UNVERIFIED_USERNAME.msg(),
+                            vanilla_translations::MULTIPLAYER_DISCONNECT_UNVERIFIED_USERNAME.msg(),
                         ),
                         AuthError::InvalidAuthServer(auth_server) => {
                             log::error!(
                                 "Invalid authentication server URL configured: {auth_server}"
                             );
                             TextComponent::translated(
-                                translations::MULTIPLAYER_DISCONNECT_AUTHSERVERS_DOWN.msg(),
+                                vanilla_translations::MULTIPLAYER_DISCONNECT_AUTHSERVERS_DOWN.msg(),
                             )
                         }
                         e => e.to_string().into(),

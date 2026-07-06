@@ -22,11 +22,11 @@ use steel_registry::item_stack::ItemStack;
 use steel_registry::sound_event::{SoundEventHolder, SoundEventRef};
 use steel_registry::{REGISTRY, vanilla_attributes, vanilla_damage_types, vanilla_entities};
 use steel_utils::entity_events::EntityStatus;
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use steel_utils::types::{Difficulty, GameType, InteractionHand};
 use steel_utils::{BlockPos, Identifier, WorldAabb};
 use text_components::TextComponent;
-use text_components::translation::TranslatedMessage;
+use text_components::translation::TranslatedContent;
 
 use crate::behavior::{
     BLOCK_BEHAVIORS, BlockCollisionContext, BlockHitResult, ITEM_BEHAVIORS, InteractionResult,
@@ -321,7 +321,7 @@ fn update_ray_axis(
 
 impl Player {
     fn invalid_entity_attacked_message() -> TextComponent {
-        TranslatedMessage {
+        TranslatedContent {
             key: "multiplayer.disconnect.invalid_entity_attacked".into(),
             fallback: None,
             args: None,
@@ -1003,7 +1003,7 @@ impl Player {
         }
 
         self.send_message(
-            &translations::COMMANDS_GAMEMODE_SUCCESS_SELF
+            &vanilla_translations::COMMANDS_GAMEMODE_SUCCESS_SELF
                 .message([get_gamemode_translation(gamemode)])
                 .into(),
         );

@@ -6,7 +6,7 @@ use crate::command::commands::{
 use crate::command::context::CommandContext;
 use crate::command::error::CommandError;
 use steel_protocol::packets::game::CChangeDifficulty;
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use steel_utils::types::Difficulty;
 use text_components::TextComponent;
 use text_components::translation::Translation;
@@ -37,12 +37,12 @@ const fn difficulty_key(difficulty: Difficulty) -> &'static str {
 }
 
 /// Returns the translatable display name for a [`Difficulty`] variant
-fn difficulty_display_name(difficulty: Difficulty) -> &'static Translation<0> {
+fn difficulty_display_name(difficulty: Difficulty) -> &'static Translation<'static, 0> {
     match difficulty {
-        Difficulty::Peaceful => &translations::OPTIONS_DIFFICULTY_PEACEFUL,
-        Difficulty::Easy => &translations::OPTIONS_DIFFICULTY_EASY,
-        Difficulty::Normal => &translations::OPTIONS_DIFFICULTY_NORMAL,
-        Difficulty::Hard => &translations::OPTIONS_DIFFICULTY_HARD,
+        Difficulty::Peaceful => &vanilla_translations::OPTIONS_DIFFICULTY_PEACEFUL,
+        Difficulty::Easy => &vanilla_translations::OPTIONS_DIFFICULTY_EASY,
+        Difficulty::Normal => &vanilla_translations::OPTIONS_DIFFICULTY_NORMAL,
+        Difficulty::Hard => &vanilla_translations::OPTIONS_DIFFICULTY_HARD,
     }
 }
 
@@ -55,7 +55,7 @@ impl CommandExecutor<()> for QueryExecutor {
         let display_name = difficulty_display_name(difficulty);
 
         context.sender.send_message(
-            &translations::COMMANDS_DIFFICULTY_QUERY
+            &vanilla_translations::COMMANDS_DIFFICULTY_QUERY
                 .message([TextComponent::from(display_name)])
                 .into(),
         );
@@ -79,7 +79,7 @@ impl CommandExecutor<()> for SetExecutor {
             .all(|world| world.level_data.read().data().difficulty == difficulty)
         {
             return Err(CommandError::CommandFailed(Box::new(
-                translations::COMMANDS_DIFFICULTY_FAILURE
+                vanilla_translations::COMMANDS_DIFFICULTY_FAILURE
                     .message([TextComponent::plain(difficulty_key(difficulty))])
                     .into(),
             )));
@@ -96,7 +96,7 @@ impl CommandExecutor<()> for SetExecutor {
 
         let display_name = difficulty_display_name(difficulty);
         context.sender.send_message(
-            &translations::COMMANDS_DIFFICULTY_SUCCESS
+            &vanilla_translations::COMMANDS_DIFFICULTY_SUCCESS
                 .message([TextComponent::from(display_name)])
                 .into(),
         );

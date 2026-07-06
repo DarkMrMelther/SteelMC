@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use text_components::TextComponent;
-use text_components::translation::TranslatedMessage;
+use text_components::translation::TranslatedContent;
 
 use crate::command::{
     arguments::block_pos::BlockPosArgument,
@@ -78,7 +78,7 @@ fn command_failed(error: String) -> CommandError {
 }
 
 fn translated<const N: usize>(key: &'static str, args: [TextComponent; N]) -> TextComponent {
-    TranslatedMessage {
+    TranslatedContent {
         key: Cow::Borrowed(key),
         fallback: None,
         args: Some(Box::new(args)),

@@ -23,5 +23,6 @@ pub mod server;
 #[cfg(test)]
 #[path = "../tests/support/mod.rs"]
 pub(crate) mod test_support;
+pub mod text;
 pub mod world;
 pub mod worldgen;

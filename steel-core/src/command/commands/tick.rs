@@ -1,5 +1,5 @@
 //! Handler for the "tick" command.
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
 
 use crate::command::arguments::float::FloatArgument;
@@ -66,9 +66,9 @@ impl CommandExecutor<()> for TickQueryExecutor {
         if tick_manager.is_sprinting() {
             context
                 .sender
-                .send_message(&translations::COMMANDS_TICK_STATUS_SPRINTING.msg().into());
+                .send_message(&vanilla_translations::COMMANDS_TICK_STATUS_SPRINTING.msg().into());
             context.sender.send_message(
-                &translations::COMMANDS_TICK_QUERY_RATE_SPRINTING
+                &vanilla_translations::COMMANDS_TICK_QUERY_RATE_SPRINTING
                     .message([
                         TextComponent::from(tick_rate_string),
                         TextComponent::from(busy_time),
@@ -80,20 +80,20 @@ impl CommandExecutor<()> for TickQueryExecutor {
             if tick_manager.is_frozen() {
                 context
                     .sender
-                    .send_message(&translations::COMMANDS_TICK_STATUS_FROZEN.msg().into());
+                    .send_message(&vanilla_translations::COMMANDS_TICK_STATUS_FROZEN.msg().into());
             } else if tick_manager.nanoseconds_per_tick < busy_time_nanos {
                 context
                     .sender
-                    .send_message(&translations::COMMANDS_TICK_STATUS_LAGGING.msg().into());
+                    .send_message(&vanilla_translations::COMMANDS_TICK_STATUS_LAGGING.msg().into());
             } else {
                 context
                     .sender
-                    .send_message(&translations::COMMANDS_TICK_STATUS_RUNNING.msg().into());
+                    .send_message(&vanilla_translations::COMMANDS_TICK_STATUS_RUNNING.msg().into());
             }
 
             let target_mspt = nanos_to_ms_string(tick_manager.nanoseconds_per_tick);
             context.sender.send_message(
-                &translations::COMMANDS_TICK_QUERY_RATE_RUNNING
+                &vanilla_translations::COMMANDS_TICK_QUERY_RATE_RUNNING
                     .message([
                         TextComponent::from(tick_rate_string),
                         TextComponent::from(busy_time),
@@ -127,7 +127,7 @@ impl CommandExecutor<()> for TickQueryExecutor {
         };
 
         context.sender.send_message(
-            &translations::COMMANDS_TICK_QUERY_PERCENTILES
+            &vanilla_translations::COMMANDS_TICK_QUERY_PERCENTILES
                 .message([
                     TextComponent::from(p50),
                     TextComponent::from(p95),
@@ -152,7 +152,7 @@ impl CommandExecutor<((), f32)> for TickRateExecutor {
 
         let rate_string = format!("{rate:.1}");
         context.sender.send_message(
-            &translations::COMMANDS_TICK_RATE_SUCCESS
+            &vanilla_translations::COMMANDS_TICK_RATE_SUCCESS
                 .message([TextComponent::from(rate_string)])
                 .into(),
         );
@@ -184,7 +184,7 @@ impl CommandExecutor<()> for TickFreezeExecutor {
 
         context
             .sender
-            .send_message(&translations::COMMANDS_TICK_STATUS_FROZEN.msg().into());
+            .send_message(&vanilla_translations::COMMANDS_TICK_STATUS_FROZEN.msg().into());
 
         Ok(())
     }
@@ -199,7 +199,7 @@ impl CommandExecutor<()> for TickUnfreezeExecutor {
 
         context
             .sender
-            .send_message(&translations::COMMANDS_TICK_STATUS_RUNNING.msg().into());
+            .send_message(&vanilla_translations::COMMANDS_TICK_STATUS_RUNNING.msg().into());
 
         Ok(())
     }
@@ -232,14 +232,14 @@ fn step_impl(ticks: i32, context: &mut CommandContext) -> Result<(), CommandErro
     if success {
         context.server.broadcast_ticking_step();
         context.sender.send_message(
-            &translations::COMMANDS_TICK_STEP_SUCCESS
+            &vanilla_translations::COMMANDS_TICK_STEP_SUCCESS
                 .message([TextComponent::from(format!("{ticks}"))])
                 .into(),
         );
         Ok(())
     } else {
         Err(CommandError::CommandFailed(Box::new(
-            translations::COMMANDS_TICK_STEP_FAIL.msg().into(),
+            vanilla_translations::COMMANDS_TICK_STEP_FAIL.msg().into(),
         )))
     }
 }
@@ -254,11 +254,11 @@ impl CommandExecutor<()> for TickStepStopExecutor {
             context.server.broadcast_ticking_step();
             context
                 .sender
-                .send_message(&translations::COMMANDS_TICK_STEP_STOP_SUCCESS.msg().into());
+                .send_message(&vanilla_translations::COMMANDS_TICK_STEP_STOP_SUCCESS.msg().into());
             Ok(())
         } else {
             Err(CommandError::CommandFailed(Box::new(
-                translations::COMMANDS_TICK_STEP_STOP_FAIL.msg().into(),
+                vanilla_translations::COMMANDS_TICK_STEP_STOP_FAIL.msg().into(),
             )))
         }
     }
@@ -282,12 +282,12 @@ impl CommandExecutor<((), i32)> for TickSprintExecutor {
         if interrupted {
             context
                 .sender
-                .send_message(&translations::COMMANDS_TICK_SPRINT_STOP_SUCCESS.msg().into());
+                .send_message(&vanilla_translations::COMMANDS_TICK_SPRINT_STOP_SUCCESS.msg().into());
         }
 
         context
             .sender
-            .send_message(&translations::COMMANDS_TICK_STATUS_SPRINTING.msg().into());
+            .send_message(&vanilla_translations::COMMANDS_TICK_STATUS_SPRINTING.msg().into());
 
         Ok(())
     }
@@ -305,7 +305,7 @@ impl CommandExecutor<()> for TickSprintStopExecutor {
 
             // Send sprint report
             context.sender.send_message(
-                &translations::COMMANDS_TICK_SPRINT_REPORT
+                &vanilla_translations::COMMANDS_TICK_SPRINT_REPORT
                     .message([
                         TextComponent::from(format!("{}", report.ticks_per_second)),
                         TextComponent::from(format!("{:.2}", report.ms_per_tick)),
@@ -315,7 +315,7 @@ impl CommandExecutor<()> for TickSprintStopExecutor {
             Ok(())
         } else {
             Err(CommandError::CommandFailed(Box::new(
-                translations::COMMANDS_TICK_SPRINT_STOP_FAIL.msg().into(),
+                vanilla_translations::COMMANDS_TICK_SPRINT_STOP_FAIL.msg().into(),
             )))
         }
     }

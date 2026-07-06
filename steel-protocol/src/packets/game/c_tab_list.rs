@@ -16,7 +16,7 @@ pub struct CTabList {
 impl CTabList {
     /// Creates a new tab list packet with the specified header and footer.
     #[must_use]
-    pub fn new<T: TextResolutor>(
+    pub fn new<T: for<'a> TextResolutor<'a>>(
         header: &TextComponent,
         footer: &TextComponent,
         player: &T,
@@ -38,7 +38,7 @@ impl CTabList {
 
     /// Creates a tab list packet with only a header.
     #[must_use]
-    pub fn header_only<T: TextResolutor>(header: &TextComponent, player: &T) -> Self {
+    pub fn header_only<T: for<'a> TextResolutor<'a>>(header: &TextComponent, player: &T) -> Self {
         Self {
             header: header.resolve(player),
             footer: TextComponent::new(),
@@ -47,7 +47,7 @@ impl CTabList {
 
     /// Creates a tab list packet with only a footer.
     #[must_use]
-    pub fn footer_only<T: TextResolutor>(footer: &TextComponent, player: &T) -> Self {
+    pub fn footer_only<T: for<'a> TextResolutor<'a>>(footer: &TextComponent, player: &T) -> Self {
         Self {
             header: TextComponent::new(),
             footer: footer.resolve(player),

@@ -1,6 +1,6 @@
 use crate::{
     SERVER,
-    logger::{Move, output::Output, terminal_height},
+    logger::{Move, output::Output, request::InputRequest, terminal_height},
 };
 use crossterm::{
     cursor::{RestorePosition, SavePosition},
@@ -33,7 +33,7 @@ impl Completer {
 }
 /// Modify suggestions
 impl Completer {
-    pub fn update(&mut self, out: &mut Output, pos: usize) {
+    pub fn update(&mut self, out: &mut Output, req: &Option<InputRequest>, pos: usize) {
         let char_start = if pos == 0 {
             0
         } else {
@@ -43,21 +43,24 @@ impl Completer {
         // Gets the right chars
         let command = &out.text[..char_start];
 
-        let Some(server) = SERVER.get() else {
+        // Gets the suggested commands
+        self.suggestions = if let Some(req) = req {
+            req.options(command)
+        } else if let Some(server) = SERVER.get() {
+            server
+                .command_dispatcher
+                .read()
+                .handle_suggestions(CommandSender::Console, command, server.clone())
+                .0
+                .into_iter()
+                .map(|suggestion| suggestion.text)
+                .collect()
+        } else {
             self.completed = String::new();
             self.selected = 0;
             self.error = true;
             return;
         };
-        // Gets the suggested commands
-        self.suggestions = server
-            .command_dispatcher
-            .read()
-            .handle_suggestions(CommandSender::Console, command, server.clone())
-            .0
-            .into_iter()
-            .map(|suggestion| suggestion.text)
-            .collect();
         if self.suggestions.is_empty() {
             self.completed = String::new();
             self.selected = 0;

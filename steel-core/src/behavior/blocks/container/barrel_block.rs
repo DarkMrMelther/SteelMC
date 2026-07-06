@@ -9,7 +9,8 @@ use steel_registry::blocks::BlockRef;
 use steel_registry::blocks::block_state_ext::BlockStateExt;
 use steel_registry::blocks::properties::BlockStateProperties;
 use steel_registry::vanilla_block_entity_types;
-use steel_utils::{BlockPos, BlockStateId, translations};
+use steel_registry::vanilla_translations;
+use steel_utils::{BlockPos, BlockStateId};
 use text_components::TextComponent;
 
 use crate::behavior::InventoryAccess;
@@ -74,7 +75,7 @@ impl BlockBehavior for BarrelBlock {
         player.open_menu(&ChestMenuProvider::three_rows(
             player.inventory.clone(),
             container_ref,
-            TextComponent::translated(translations::CONTAINER_BARREL.msg()),
+            TextComponent::translated(vanilla_translations::CONTAINER_BARREL.msg()),
         ));
 
         // TODO: Award stat OPEN_BARREL

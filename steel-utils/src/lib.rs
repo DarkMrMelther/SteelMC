@@ -38,14 +38,6 @@ pub mod uuid_ext;
 pub mod value_providers;
 
 #[rustfmt::skip]
-#[path = "generated/vanilla_translations/ids.rs"]
-#[expect(missing_docs, warnings)]
-pub mod translations;
-#[rustfmt::skip]
-#[path = "generated/vanilla_translations/registry.rs"]
-#[expect(missing_docs, warnings)]
-pub mod translations_registry;
-#[rustfmt::skip]
 #[path = "generated/entity_events.rs"]
 #[expect(missing_docs, warnings)]
 pub mod entity_events;

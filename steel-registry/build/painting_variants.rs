@@ -54,7 +54,7 @@ fn generate_text_component(component: &TextComponentJson) -> TokenStream {
         // Generate code that creates a TextComponent with color
         quote! {
             TextComponent {
-                content: Content::Translate(TranslatedMessage::new(#translate, None)),
+                content: Content::Translate(TranslatedContent::new(#translate, None)),
                 format: Format {
                     color: Some(#color),
                     font: None,
@@ -71,7 +71,7 @@ fn generate_text_component(component: &TextComponentJson) -> TokenStream {
         }
     } else {
         quote! {
-            TextComponent::translated(TranslatedMessage::new(#translate, None))
+            TextComponent::translated(TranslatedContent::new(#translate, None))
         }
     }
 }
@@ -88,7 +88,7 @@ pub(crate) fn build() -> TokenStream {
         };
         use steel_utils::Identifier;
         use text_components::{
-            TextComponent, content::Content, format::{Color, Format}, interactivity::Interactivity, translation::TranslatedMessage
+            TextComponent, content::Content, format::{Color, Format}, interactivity::Interactivity, translation::TranslatedContent
         };
         use std::borrow::Cow;
     });

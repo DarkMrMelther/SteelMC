@@ -9,7 +9,7 @@ use crate::command::error::CommandError;
 use crate::entity::Entity;
 use crate::player::Player;
 use std::sync::Arc;
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use steel_utils::types::GameType;
 use text_components::TextComponent;
 use text_components::translation::Translation;
@@ -78,7 +78,7 @@ impl CommandExecutor<(((), GameType), Vec<Arc<Player>>)> for GameModeTargetComma
 
                 if !sender_is_target {
                     context.sender.send_message(
-                        &translations::COMMANDS_GAMEMODE_SUCCESS_OTHER
+                        &vanilla_translations::COMMANDS_GAMEMODE_SUCCESS_OTHER
                             .message([
                                 TextComponent::plain(target.gameprofile.name.clone()),
                                 TextComponent::from(mode_translation),
@@ -95,11 +95,11 @@ impl CommandExecutor<(((), GameType), Vec<Arc<Player>>)> for GameModeTargetComma
 
 /// Retrieves the translation for a `GameType`
 #[must_use]
-pub fn get_gamemode_translation(gamemode: GameType) -> &'static Translation<0> {
+pub fn get_gamemode_translation(gamemode: GameType) -> &'static Translation<'static, 0> {
     match gamemode {
-        GameType::Survival => &translations::GAME_MODE_SURVIVAL,
-        GameType::Creative => &translations::GAME_MODE_CREATIVE,
-        GameType::Adventure => &translations::GAME_MODE_ADVENTURE,
-        GameType::Spectator => &translations::GAME_MODE_SPECTATOR,
+        GameType::Survival => &vanilla_translations::GAME_MODE_SURVIVAL,
+        GameType::Creative => &vanilla_translations::GAME_MODE_CREATIVE,
+        GameType::Adventure => &vanilla_translations::GAME_MODE_ADVENTURE,
+        GameType::Spectator => &vanilla_translations::GAME_MODE_SPECTATOR,
     }
 }

@@ -14,7 +14,7 @@ pub struct COpenScreen {
 }
 
 impl COpenScreen {
-    pub fn new<T: TextResolutor>(
+    pub fn new<T: for<'a> TextResolutor<'a>>(
         container_id: i32,
         menu_type: MenuTypeRef,
         title: &TextComponent,

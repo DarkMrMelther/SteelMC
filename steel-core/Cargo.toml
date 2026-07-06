@@ -9,6 +9,7 @@ build = "build/build.rs"
 [features]
 #default = ["stand-alone"]
 stand-alone = []
+require-eula = []
 slow_chunk_gen = []
 flint = []
 

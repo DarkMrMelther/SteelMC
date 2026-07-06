@@ -6,8 +6,8 @@ use std::borrow::Cow;
 use std::sync::Arc;
 
 use steel_registry::enchantment::{Enchantment, EnchantmentRef};
-use steel_utils::translations;
-use text_components::translation::TranslatedMessage;
+use steel_registry::vanilla_translations;
+use text_components::translation::TranslatedContent;
 use text_components::{Modifier, TextComponent};
 
 use crate::{
@@ -63,7 +63,7 @@ fn enchant(
 ) -> Result<(), CommandError> {
     if level > enchantment.max_level as i32 {
         return Err(CommandError::CommandFailed(Box::new(
-            translations::COMMANDS_ENCHANT_FAILED_LEVEL
+            vanilla_translations::COMMANDS_ENCHANT_FAILED_LEVEL
                 .message([
                     TextComponent::from(level.to_string()),
                     TextComponent::from(enchantment.max_level.to_string()),
@@ -82,7 +82,7 @@ fn enchant(
         if item.is_empty() {
             if targets.len() == 1 {
                 return Err(CommandError::CommandFailed(Box::new(
-                    translations::COMMANDS_ENCHANT_FAILED_ITEMLESS
+                    vanilla_translations::COMMANDS_ENCHANT_FAILED_ITEMLESS
                         .message([TextComponent::from(target.gameprofile.name.clone())])
                         .into(),
                 )));
@@ -96,7 +96,7 @@ fn enchant(
             if targets.len() == 1 {
                 let item_name = item.item.key.to_string();
                 return Err(CommandError::CommandFailed(Box::new(
-                    translations::COMMANDS_ENCHANT_FAILED_INCOMPATIBLE
+                    vanilla_translations::COMMANDS_ENCHANT_FAILED_INCOMPATIBLE
                         .message([TextComponent::from(item_name)])
                         .into(),
                 )));
@@ -111,7 +111,7 @@ fn enchant(
 
     if success == 0 {
         return Err(CommandError::CommandFailed(Box::new(
-            translations::COMMANDS_ENCHANT_FAILED.msg().into(),
+            vanilla_translations::COMMANDS_ENCHANT_FAILED.msg().into(),
         )));
     }
 
@@ -119,7 +119,7 @@ fn enchant(
 
     if targets.len() == 1 {
         ctx.sender.send_message(
-            &translations::COMMANDS_ENCHANT_SUCCESS_SINGLE
+            &vanilla_translations::COMMANDS_ENCHANT_SUCCESS_SINGLE
                 .message([
                     enchantment_name,
                     TextComponent::from(targets[0].gameprofile.name.clone()),
@@ -128,7 +128,7 @@ fn enchant(
         );
     } else {
         ctx.sender.send_message(
-            &translations::COMMANDS_ENCHANT_SUCCESS_MULTIPLE
+            &vanilla_translations::COMMANDS_ENCHANT_SUCCESS_MULTIPLE
                 .message([
                     enchantment_name,
                     TextComponent::from(targets.len().to_string()),
@@ -143,7 +143,7 @@ fn enchant(
 /// Builds a display name matching vanilla's `Enchantment.getFullname`:
 /// translatable enchantment name + level suffix when level > 1 or `max_level` > 1.
 fn enchantment_display_name(enchantment: EnchantmentRef, level: i32) -> TextComponent {
-    let name_msg = TranslatedMessage {
+    let name_msg = TranslatedContent {
         key: Cow::Owned(format!(
             "enchantment.{}.{}",
             enchantment.key.namespace, enchantment.key.path
@@ -154,7 +154,7 @@ fn enchantment_display_name(enchantment: EnchantmentRef, level: i32) -> TextComp
     let mut component = TextComponent::translated(name_msg);
 
     if level != 1 || enchantment.max_level != 1 {
-        let level_msg = TranslatedMessage {
+        let level_msg = TranslatedContent {
             key: Cow::Owned(format!("enchantment.level.{level}")),
             args: None,
             fallback: None,

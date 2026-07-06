@@ -11,7 +11,7 @@ use steel_protocol::packets::game::{
 use steel_registry::game_rules::GameRuleValue;
 use steel_registry::vanilla_game_rules::{ELYTRA_MOVEMENT_CHECK, PLAYER_MOVEMENT_CHECK};
 use steel_registry::vanilla_mob_effects;
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use steel_utils::types::GameType;
 
 use crate::entity::{
@@ -201,7 +201,7 @@ impl Player {
             packet.get_x_rot(0.0),
             packet.get_y_rot(0.0),
         ) {
-            self.disconnect(translations::MULTIPLAYER_DISCONNECT_INVALID_PLAYER_MOVEMENT.msg());
+            self.disconnect(vanilla_translations::MULTIPLAYER_DISCONNECT_INVALID_PLAYER_MOVEMENT.msg());
             return;
         }
 
@@ -437,7 +437,7 @@ impl Player {
             packet.x_rot,
             packet.y_rot,
         ) {
-            self.disconnect(translations::MULTIPLAYER_DISCONNECT_INVALID_VEHICLE_MOVEMENT.msg());
+            self.disconnect(vanilla_translations::MULTIPLAYER_DISCONNECT_INVALID_VEHICLE_MOVEMENT.msg());
             return;
         }
 
@@ -678,7 +678,7 @@ impl Player {
                 "{} was kicked for floating too long!",
                 self.gameprofile.name
             );
-            self.disconnect(translations::MULTIPLAYER_DISCONNECT_FLYING.msg());
+            self.disconnect(vanilla_translations::MULTIPLAYER_DISCONNECT_FLYING.msg());
         }
 
         should_disconnect
@@ -709,7 +709,7 @@ impl Player {
                 "{} was kicked for floating a vehicle too long!",
                 self.gameprofile.name
             );
-            self.disconnect(translations::MULTIPLAYER_DISCONNECT_FLYING.msg());
+            self.disconnect(vanilla_translations::MULTIPLAYER_DISCONNECT_FLYING.msg());
         }
 
         should_disconnect
@@ -781,7 +781,7 @@ impl Player {
             movement.reset_last_known_client_movement();
         } else if packet.teleport_id == tp.teleport_id && tp.awaiting_position.is_none() {
             drop(tp);
-            self.disconnect(translations::MULTIPLAYER_DISCONNECT_INVALID_PLAYER_MOVEMENT.msg());
+            self.disconnect(vanilla_translations::MULTIPLAYER_DISCONNECT_INVALID_PLAYER_MOVEMENT.msg());
         }
     }
 

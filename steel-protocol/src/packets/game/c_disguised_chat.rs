@@ -14,7 +14,7 @@ pub struct CDisguisedChat {
 }
 
 impl CDisguisedChat {
-    pub fn new<T: TextResolutor>(
+    pub fn new<T: for<'a> TextResolutor<'a>>(
         message: &TextComponent,
         chat_type: ChatTypeBound,
         player: &T,

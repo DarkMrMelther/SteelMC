@@ -1,4 +1,7 @@
-use crate::config::{LogConfig, LogTimeFormat};
+use crate::{
+    config::{LogConfig, LogTimeFormat},
+    logger::request::InputRequest,
+};
 use chrono::Utc;
 use crossterm::{
     style::{Color::DarkGrey, ResetColor, SetForegroundColor},
@@ -9,8 +12,8 @@ use std::{
     sync::Arc,
     time::{self, Instant},
 };
-use steel_utils::locks::AsyncRwLock;
 use steel_utils::logger::{Level, LogData, STEEL_LOGGER, SteelLogger};
+use steel_utils::{locks::AsyncRwLock, logger::RequestKind};
 use tokio::{sync::mpsc, task, time::timeout};
 use tokio_util::sync::CancellationToken;
 use tracing::Subscriber;
@@ -21,6 +24,7 @@ mod file;
 mod history;
 mod input;
 mod output;
+mod request;
 mod selection;
 mod state;
 mod suggestions;
@@ -235,6 +239,27 @@ impl CommandLogger {
 impl SteelLogger for CommandLogger {
     fn log(&self, lvl: Level, data: LogData) {
         self.sender.send((lvl, data)).ok();
+    }
+
+    fn request_input(
+        &self,
+        kind: RequestKind,
+        message: String,
+    ) -> std::pin::Pin<Box<dyn Future<Output = Option<String>> + Send + '_>> {
+        Box::pin(async {
+            let mut lock = self.input.write().await;
+            if lock.request.is_some() {
+                return None;
+            }
+            self.log(
+                Level::Tracing(tracing::Level::WARN),
+                LogData::message(message),
+            );
+            let (request, receiver) = InputRequest::new(kind);
+            lock.request = Some(request);
+            drop(lock);
+            receiver.await.ok()
+        })
     }
 }
 

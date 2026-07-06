@@ -1,4 +1,5 @@
 //! This module contains the `JavaConnection` struct, which is used to represent a connection to a Java client.
+use std::borrow::Cow;
 use std::io::Cursor;
 use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -22,11 +23,10 @@ use steel_protocol::packets::game::{
 
 use steel_protocol::utils::{ConnectionProtocol, PacketError, RawPacket};
 use steel_registry::packets::play;
+use steel_registry::vanilla_translations;
 use steel_utils::locks::{AsyncMutex, SyncMutex};
-use steel_utils::translations;
 use text_components::TextComponent;
 use text_components::content::Resolvable;
-use text_components::custom::CustomData;
 use text_components::resolving::TextResolutor;
 use tokio::io::{BufReader, BufWriter};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
@@ -160,7 +160,7 @@ impl JavaConnection {
 
         if now - tracker.alive_time >= 15000 {
             if tracker.alive_pending {
-                self.disconnect(translations::DISCONNECT_TIMEOUT.msg());
+                self.disconnect(vanilla_translations::DISCONNECT_TIMEOUT.msg());
             } else {
                 tracker.alive_pending = true;
                 tracker.alive_id = now;
@@ -189,7 +189,7 @@ impl JavaConnection {
             let mut latency = self.latency.lock();
             *latency = (*latency * 3 + time) / 4;
         } else {
-            self.disconnect(translations::DISCONNECT_TIMEOUT.msg());
+            self.disconnect(vanilla_translations::DISCONNECT_TIMEOUT.msg());
         }
     }
 
@@ -587,17 +587,19 @@ impl JavaConnection {
     }
 }
 
-impl TextResolutor for JavaConnection {
+impl<'a> TextResolutor<'a> for JavaConnection {
     fn resolve_content(&self, _resolvable: &Resolvable) -> TextComponent {
         TextComponent::new()
     }
 
-    fn resolve_custom(&self, _data: &CustomData) -> Option<TextComponent> {
-        None
+    fn locale(&self) -> Cow<'_, str> {
+        self.player.upgrade().map_or(Cow::Borrowed("en_us"), |p| {
+            Cow::Owned(p.client_information().language.clone())
+        })
     }
 
-    fn translate(&self, _key: &str) -> Option<String> {
-        None
+    fn entity_id(&self) -> Option<i32> {
+        self.player.upgrade().map_or_default(|p| Some(p.base.id()))
     }
 }
 

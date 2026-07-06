@@ -363,6 +363,37 @@ fn discard_restored_entities(entities: &[SharedEntity]) {
     }
 }
 
+#[cfg(feature = "require-eula")]
+async fn request_eula(cancel_token: CancellationToken) {
+    use steel_utils::logger::{RequestKind, request_input};
+    use text_components::interactivity::ClickEvent;
+    loop {
+        let message = TextComponent::const_plain("To use Steel you need to accept the ")
+            .add_children(vec![
+                "Minecraft EULA".click_event(ClickEvent::open_url("https://aka.ms/MinecraftEULA")),
+                ". Do you want to accept it? [".into(),
+                "Y".color(Color::Green).underlined(true),
+                "es".color(Color::Green),
+                " / ".into(),
+                "N".color(Color::Red).underlined(true),
+                "o".color(Color::Red),
+                "] (It can be accepted manully in the config)".into(),
+            ]);
+        let Some(response) = request_input(RequestKind::Bool, format!("{}", message.log())).await
+        else {
+            continue;
+        };
+        match &*response.to_lowercase() {
+            "yes" | "y" | "true" => {
+                std::fs::write("eula.txt", "true").ok();
+            }
+            "no" | "n" | "false" => cancel_token.cancel(),
+            _ => continue,
+        };
+        break;
+    }
+}
+
 /// The main server struct.
 pub struct Server {
     /// Runtime configuration (view distance, compression, etc.).
@@ -419,9 +450,20 @@ impl Server {
         init_block_entities();
         init_entities();
         log::info!("Behavior registries initialized");
-        log::info!(
-            "SteelMC is not affiliated with Mojang or Microsoft. Use is subject to the Minecraft EULA: https://aka.ms/MinecraftEULA"
-        );
+        log::info!("SteelMC is not affiliated with Mojang or Microsoft.");
+        #[cfg(feature = "require-eula")]
+        {
+            let eula_path = Path::new("eula.txt");
+            if !eula_path.exists()
+                || !std::fs::read_to_string(eula_path)
+                    .unwrap_or_default()
+                    .contains("true")
+            {
+                request_eula(cancel_token.clone()).await;
+            }
+        }
+        #[cfg(not(feature = "require-eula"))]
+        log::warn!("Use is subject to the Minecraft EULA: https://aka.ms/MinecraftEULA");
 
         let registry_cache = RegistryCache::new(config.compression);
 
@@ -1550,9 +1592,9 @@ impl Server {
 
     /// Broadcasts a sprint completion report to all players.
     fn broadcast_sprint_report(&self, report: &SprintReport) {
-        use steel_utils::translations;
+        use steel_registry::vanilla_translations;
 
-        let message: TextComponent = translations::COMMANDS_TICK_SPRINT_REPORT
+        let message: TextComponent = vanilla_translations::COMMANDS_TICK_SPRINT_REPORT
             .message([
                 TextComponent::from(format!("{}", report.ticks_per_second)),
                 TextComponent::from(format!("{:.2}", report.ms_per_tick)),

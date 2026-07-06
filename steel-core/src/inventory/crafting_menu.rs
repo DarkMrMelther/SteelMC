@@ -13,8 +13,9 @@ use steel_registry::item_stack::ItemStack;
 use steel_registry::menu_type::MenuTypeRef;
 use steel_registry::vanilla_blocks;
 use steel_registry::vanilla_menu_types;
+use steel_registry::vanilla_translations;
 use steel_utils::locks::SyncMutex;
-use steel_utils::{BlockPos, translations};
+use steel_utils::{BlockPos};
 use text_components::TextComponent;
 
 use crate::inventory::{
@@ -362,7 +363,7 @@ impl CraftingMenuProvider {
 
 impl MenuProvider for CraftingMenuProvider {
     fn title(&self) -> TextComponent {
-        TextComponent::translated(translations::CONTAINER_CRAFTING.msg())
+        TextComponent::translated(vanilla_translations::CONTAINER_CRAFTING.msg())
     }
 
     fn create(&self, container_id: u8) -> Box<dyn MenuInstance> {

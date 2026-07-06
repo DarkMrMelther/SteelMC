@@ -78,7 +78,7 @@ pub(crate) fn build() -> TokenStream {
     stream.extend(quote! {
         use crate::dialog::{Dialog, DialogVariant, DialogRegistry, ExitAction};
         use steel_utils::Identifier;
-        use text_components::{TextComponent, translation::TranslatedMessage};
+        use text_components::{TextComponent, translation::TranslatedContent};
     });
 
     // Generate static dialog definitions

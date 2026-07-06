@@ -9,7 +9,7 @@ use crate::command::error::CommandError;
 use std::borrow::Cow;
 use steel_registry::REGISTRY;
 use steel_registry::game_rules::{GameRuleRef, GameRuleType, GameRuleValue};
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
 
 /// Returns the handler for the "gamerule" command.
@@ -60,7 +60,7 @@ impl CommandExecutor<()> for QueryExecutor {
         let value = world.get_game_rule(self.0);
 
         context.sender.send_message(
-            &translations::COMMANDS_GAMERULE_QUERY
+            &vanilla_translations::COMMANDS_GAMERULE_QUERY
                 .message([
                     TextComponent::from(rule_name),
                     TextComponent::from(value.to_string()),
@@ -83,7 +83,7 @@ impl CommandExecutor<((), bool)> for SetBoolExecutor {
         world.set_game_rule(self.0, GameRuleValue::Bool(value));
 
         context.sender.send_message(
-            &translations::COMMANDS_GAMERULE_SET
+            &vanilla_translations::COMMANDS_GAMERULE_SET
                 .message([
                     TextComponent::from(rule_name),
                     TextComponent::from(value.to_string()),
@@ -106,7 +106,7 @@ impl CommandExecutor<((), i32)> for SetIntExecutor {
         world.set_game_rule(self.0, GameRuleValue::Int(value));
 
         context.sender.send_message(
-            &translations::COMMANDS_GAMERULE_SET
+            &vanilla_translations::COMMANDS_GAMERULE_SET
                 .message([
                     TextComponent::from(rule_name),
                     TextComponent::from(value.to_string()),

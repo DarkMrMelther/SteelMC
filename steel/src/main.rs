@@ -15,8 +15,9 @@ use steel::config::{self, LogConfig};
 use steel::logger::CommandLogger;
 use steel::{SERVER, SteelServer, logger::LoggerLayer};
 use steel_core::server::Server;
-use steel_utils::text::DisplayResolutor;
+use steel_core::text::{DisplayResolutor, GlobalResolutionHelper};
 use text_components::fmt::set_display_resolutor;
+use text_components::resolving::set_resolution_helper;
 use tokio::runtime::{Builder, Runtime};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 #[cfg(feature = "jaeger")]
@@ -94,7 +95,9 @@ async fn init_tracing(
             .from_env_lossy(),
     );
 
+    set_resolution_helper(Arc::new(GlobalResolutionHelper));
     set_display_resolutor(&DisplayResolutor);
+
     if let Err(err) = tracing.try_init() {
         logger.stop().await;
         return Err(format!("failed to initialize tracing subscriber: {err}"));

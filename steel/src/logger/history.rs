@@ -63,7 +63,9 @@ impl History {
         let text = state.history.values[state.history.pos - 1].clone();
         state.out.text = text.to_string();
         let length = text.chars().count();
-        state.completion.update(&mut state.out, length);
+        state
+            .completion
+            .update(&mut state.out, &state.request, length);
         state.rewrite_input(length, length)?;
         Ok(())
     }

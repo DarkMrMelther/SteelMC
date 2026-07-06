@@ -2,7 +2,8 @@
 use std::sync::Arc;
 
 use glam::DVec3;
-use steel_utils::{BlockPos, translations};
+use steel_utils::{BlockPos, };
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
 
 use crate::{
@@ -88,7 +89,7 @@ fn teleport_to_pos(
 ) -> Result<(), CommandError> {
     if !World::is_in_spawnable_bounds(BlockPos::from(pos)) {
         ctx.sender.send_message(
-            &translations::COMMANDS_TELEPORT_INVALID_POSITION
+            &vanilla_translations::COMMANDS_TELEPORT_INVALID_POSITION
                 .message([] as [TextComponent; 0])
                 .into(),
         );
@@ -102,7 +103,7 @@ fn teleport_to_pos(
 
     if let [target] = targets.as_slice() {
         ctx.sender.send_message(
-            &translations::COMMANDS_TELEPORT_SUCCESS_LOCATION_SINGLE
+            &vanilla_translations::COMMANDS_TELEPORT_SUCCESS_LOCATION_SINGLE
                 .message([
                     TextComponent::from(target.gameprofile.name.clone()),
                     TextComponent::from(format!("{:.2}", pos.x)),
@@ -113,7 +114,7 @@ fn teleport_to_pos(
         );
     } else {
         ctx.sender.send_message(
-            &translations::COMMANDS_TELEPORT_SUCCESS_LOCATION_MULTIPLE
+            &vanilla_translations::COMMANDS_TELEPORT_SUCCESS_LOCATION_MULTIPLE
                 .message([
                     TextComponent::from(format!("{}", targets.len())),
                     TextComponent::from(format!("{:.2}", pos.x)),
@@ -146,7 +147,7 @@ fn teleport_to_player(
 
     if let [target] = targets.as_slice() {
         ctx.sender.send_message(
-            &translations::COMMANDS_TELEPORT_SUCCESS_ENTITY_SINGLE
+            &vanilla_translations::COMMANDS_TELEPORT_SUCCESS_ENTITY_SINGLE
                 .message([
                     TextComponent::from(target.gameprofile.name.clone()),
                     TextComponent::from(destination.gameprofile.name.clone()),
@@ -155,7 +156,7 @@ fn teleport_to_player(
         );
     } else {
         ctx.sender.send_message(
-            &translations::COMMANDS_TELEPORT_SUCCESS_ENTITY_MULTIPLE
+            &vanilla_translations::COMMANDS_TELEPORT_SUCCESS_ENTITY_MULTIPLE
                 .message([
                     TextComponent::from(format!("{}", targets.len())),
                     TextComponent::from(destination.gameprofile.name.clone()),

@@ -43,7 +43,7 @@ pub(crate) fn build() -> TokenStream {
             Instrument, InstrumentRegistry,
         };
         use steel_utils::Identifier;
-        use text_components::{TextComponent, translation::TranslatedMessage};
+        use text_components::{TextComponent, translation::TranslatedContent};
     });
 
     // Generate static instrument definitions

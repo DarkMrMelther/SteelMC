@@ -2,38 +2,15 @@
 use crate::{
     hash::{ComponentHasher, HashComponent, HashEntry, sort_map_entries},
     serial::ReadFrom,
-    translations_registry::TRANSLATIONS,
 };
 use simdnbt::owned::read_tag;
 use std::io::{self, Cursor};
 use text_components::{
     TextComponent,
     content::{Content, NbtSource, Object, Resolvable},
-    custom::CustomData,
     format::Format,
     interactivity::{ClickEvent, HoverEvent},
-    resolving::TextResolutor,
 };
-
-/// A [`TextResolutor`] for the console
-pub struct DisplayResolutor;
-impl TextResolutor for DisplayResolutor {
-    fn resolve_content(&self, resolvable: &Resolvable) -> TextComponent {
-        TextComponent {
-            content: Content::Resolvable(resolvable.clone()),
-            ..Default::default()
-        }
-    }
-
-    fn resolve_custom(&self, _data: &CustomData) -> Option<TextComponent> {
-        None
-    }
-
-    fn translate(&self, key: &str) -> Option<String> {
-        TRANSLATIONS.get(key).map(ToString::to_string)
-    }
-}
-
 impl ReadFrom for TextComponent {
     fn read(data: &mut Cursor<&[u8]>) -> io::Result<Self> {
         use crate::codec::VarInt;
@@ -142,7 +119,7 @@ fn hash_component_as_map(component: &TextComponent, hasher: &mut ComponentHasher
     clippy::too_many_lines,
     reason = "each Content variant requires distinct hashing logic; splitting would hurt readability"
 )]
-fn hash_content_fields(content: &Content, entries: &mut Vec<HashEntry>) {
+fn hash_content_fields(content: &Content<'static>, entries: &mut Vec<HashEntry>) {
     match content {
         Content::Text { text } => {
             let mut key_hasher = ComponentHasher::new();
@@ -500,7 +477,7 @@ fn hash_format_fields(format: &Format, entries: &mut Vec<HashEntry>) {
     }
 }
 
-fn hash_hover_fields(event: &HoverEvent, hasher: &mut ComponentHasher) {
+fn hash_hover_fields(event: &HoverEvent<'static>, hasher: &mut ComponentHasher) {
     let mut entries: Vec<HashEntry> = Vec::new();
 
     match event {

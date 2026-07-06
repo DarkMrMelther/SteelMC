@@ -7,7 +7,7 @@ use crate::player::Player;
 use rand::seq::IteratorRandom;
 use std::sync::Arc;
 use steel_protocol::packets::game::{ArgumentType, SuggestionEntry, SuggestionType};
-use steel_utils::translations::{
+use steel_registry::vanilla_translations::{
     ARGUMENT_ENTITY_SELECTOR_ALL_PLAYERS, ARGUMENT_ENTITY_SELECTOR_NEAREST_PLAYER,
     ARGUMENT_ENTITY_SELECTOR_RANDOM_PLAYER, ARGUMENT_ENTITY_SELECTOR_SELF,
 };

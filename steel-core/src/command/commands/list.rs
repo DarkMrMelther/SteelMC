@@ -5,7 +5,7 @@ use crate::command::{
     context::CommandContext,
     error::CommandError,
 };
-use steel_utils::translations::{COMMANDS_LIST_NAME_AND_ID, COMMANDS_LIST_PLAYERS};
+use steel_registry::vanilla_translations::{COMMANDS_LIST_NAME_AND_ID, COMMANDS_LIST_PLAYERS};
 
 /// Handler for the "list" command.
 #[must_use]

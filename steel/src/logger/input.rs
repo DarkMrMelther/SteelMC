@@ -19,6 +19,7 @@ use tokio::sync::RwLockWriteGuard;
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use tokio::task::spawn_blocking;
 
+#[derive(Debug)]
 enum ExtendedKey {
     Generic(KeyEvent),
     Ctrl(char),
@@ -105,7 +106,7 @@ impl CommandLogger {
                                 } else {
                                     state.completion.enabled = true;
                                     let pos = state.out.pos;
-                                    state.completion.update(&mut state.out, pos);
+                                    state.completion.update(&mut state.out, &state.request, pos);
                                     state.rewrite_current_input()?;
                                 }
                                 continue;
@@ -132,7 +133,7 @@ impl CommandLogger {
                                     state.out.pos -= 1;
                                     let new_pos = state.out.pos;
                                     state.selection.extend(new_pos);
-                                    state.completion.update(&mut state.out, new_pos);
+                                    state.completion.update(&mut state.out, &state.request, new_pos);
                                     state.rewrite_input(state.out.length, new_pos)?;
                                 }
                                 continue;
@@ -141,7 +142,7 @@ impl CommandLogger {
                                 if state.selection.is_active() {
                                     let pos = state.selection.get_range().start;
                                     state.selection.clear();
-                                    state.completion.update(&mut state.out, pos);
+                                    state.completion.update(&mut state.out, &state.request, pos);
                                     state.rewrite_input(state.out.length, pos)?;
                                     continue;
                                 }
@@ -149,7 +150,7 @@ impl CommandLogger {
                                     let pos = state.out.pos - 1;
                                     state.out.pos -= 1;
                                     state.out.cursor_to_relative(pos)?;
-                                    state.completion.update(&mut state.out, pos);
+                                    state.completion.update(&mut state.out, &state.request, pos);
                                     state.rewrite_input(state.out.length, pos)?;
                                     continue;
                                 }
@@ -162,7 +163,7 @@ impl CommandLogger {
                                     state.out.pos += 1;
                                     let new_pos = state.out.pos;
                                     state.selection.extend(new_pos);
-                                    state.completion.update(&mut state.out, new_pos);
+                                    state.completion.update(&mut state.out, &state.request, new_pos);
                                     state.rewrite_input(state.out.length, new_pos)?;
                                 }
                             }
@@ -170,7 +171,7 @@ impl CommandLogger {
                                 if state.selection.is_active() {
                                     let pos = state.selection.get_range().end;
                                     state.selection.clear();
-                                    state.completion.update(&mut state.out, pos);
+                                    state.completion.update(&mut state.out, &state.request, pos);
                                     state.rewrite_input(state.out.length, pos)?;
                                     continue;
                                 }
@@ -178,7 +179,7 @@ impl CommandLogger {
                                     let pos = state.out.pos + 1;
                                     state.out.pos += 1;
                                     state.out.cursor_to_relative(pos)?;
-                                    state.completion.update(&mut state.out, pos);
+                                    state.completion.update(&mut state.out, &state.request, pos);
                                     state.rewrite_input(state.out.length, pos)?;
                                     continue;
                                 }
@@ -203,7 +204,7 @@ impl CommandLogger {
                                     state.out.pos
                                 };
                                 state.selection.set(start, len);
-                                state.completion.update(&mut state.out, len);
+                                state.completion.update(&mut state.out, &state.request, len);
                                 state.rewrite_input(len, len)?;
                                 continue;
                             }
@@ -211,14 +212,14 @@ impl CommandLogger {
                                 if state.selection.is_active() {
                                     let length = state.out.length;
                                     state.selection.clear();
-                                    state.completion.update(&mut state.out, length);
+                                    state.completion.update(&mut state.out, &state.request, length);
                                     state.rewrite_input(length, length)?;
                                     continue;
                                 }
                                 if !state.out.is_at_end() {
                                     state.out.pos = state.out.length;
                                     let length = state.out.length;
-                                    state.completion.update(&mut state.out, length);
+                                    state.completion.update(&mut state.out, &state.request, length);
                                     state.rewrite_input(length, length)?;
                                     continue;
                                 }
@@ -234,20 +235,20 @@ impl CommandLogger {
                                     state.out.pos
                                 };
                                 state.selection.set(0, end + 1);
-                                state.completion.update(&mut state.out, 0);
+                                state.completion.update(&mut state.out, &state.request, 0);
                                 state.rewrite_input(state.out.length, 0)?;
                                 continue;
                             }
                             KeyCode::Home => {
                                 if state.selection.is_active() {
                                     state.selection.clear();
-                                    state.completion.update(&mut state.out, 0);
+                                    state.completion.update(&mut state.out, &state.request, 0);
                                     state.rewrite_input(state.out.length, 0)?;
                                     continue;
                                 }
                                 if !state.out.is_at_start() {
                                     state.out.pos = 0;
-                                    state.completion.update(&mut state.out, 0);
+                                    state.completion.update(&mut state.out, &state.request, 0);
                                     state.rewrite_input(state.out.length, 0)?;
                                     continue;
                                 }
@@ -294,7 +295,7 @@ impl CommandLogger {
                                     }
                                     let len = state.out.length;
                                     state.selection.set(0, len);
-                                    state.completion.update(&mut state.out, len);
+                                    state.completion.update(&mut state.out, &state.request, len);
                                     state.rewrite_input(len, len)?;
                                     continue;
                                 }
@@ -372,6 +373,12 @@ fn send_state(mut lock: RwLockWriteGuard<'_, LogState>) {
     let message = lock.out.text.clone();
     lock.history.push(message.clone());
     lock.reset().ok();
+    if let Some(request) = lock.request.take() {
+        drop(lock);
+        steel_utils::console!("{}", message);
+        request.sender.send(message).ok();
+        return;
+    }
     drop(lock);
     steel_utils::console!("{}", message);
     if let Some(server) = SERVER.get() {

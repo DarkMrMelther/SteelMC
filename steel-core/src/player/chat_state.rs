@@ -12,7 +12,7 @@ use steel_protocol::packets::game::{
     CPlayerChat, CPlayerInfoUpdate, ChatTypeBound, FilterType, SChat, SChatAck, SChatSessionUpdate,
 };
 use steel_registry::{RegistryEntry, vanilla_chat_types};
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::Modifier;
 use text_components::TextComponent;
 use text_components::interactivity::{ClickEvent, HoverEvent};
@@ -90,7 +90,7 @@ impl Player {
 
         if should_disconnect {
             // TODO: Skip operators and the singleplayer owner once Steel has operator state
-            self.disconnect(translations::DISCONNECT_SPAM.msg());
+            self.disconnect(vanilla_translations::DISCONNECT_SPAM.msg());
         }
     }
 
@@ -102,7 +102,7 @@ impl Player {
 
         if should_disconnect {
             // TODO: Skip operators and the singleplayer owner once Steel has operator state.
-            self.disconnect(translations::DISCONNECT_SPAM.msg());
+            self.disconnect(vanilla_translations::DISCONNECT_SPAM.msg());
         }
     }
 

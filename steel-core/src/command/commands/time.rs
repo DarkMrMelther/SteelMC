@@ -1,7 +1,7 @@
 //! Handler for the `time` command
 use steel_protocol::packets::game::CSetTime;
 use steel_registry::vanilla_game_rules::ADVANCE_TIME;
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
 
 use crate::command::{
@@ -53,7 +53,7 @@ impl CommandExecutor<()> for TimeQueryExecutor {
             }
         };
         context.sender.send_message(
-            &translations::COMMANDS_TIME_QUERY
+            &vanilla_translations::COMMANDS_TIME_QUERY
                 .message([TextComponent::from(format!("{number}"))])
                 .into(),
         );
@@ -99,7 +99,7 @@ impl CommandExecutor<((), i32)> for TimeExecutor {
         };
 
         context.sender.send_message(
-            &translations::COMMANDS_TIME_SET
+            &vanilla_translations::COMMANDS_TIME_SET
                 .message([TextComponent::from(format!("{new_day_time}"))])
                 .into(),
         );
@@ -130,7 +130,7 @@ impl<const DAYTIME: i64> CommandExecutor<()> for TimeConstSetExecutor<DAYTIME> {
         });
 
         context.sender.send_message(
-            &translations::COMMANDS_TIME_SET
+            &vanilla_translations::COMMANDS_TIME_SET
                 .message([TextComponent::from(format!("{DAYTIME}"))])
                 .into(),
         );

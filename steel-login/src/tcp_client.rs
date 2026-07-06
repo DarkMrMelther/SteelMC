@@ -4,6 +4,7 @@
 //! until the connection is upgraded to play state.
 
 use std::{
+    borrow::Cow,
     cmp::Ordering,
     fmt::{self, Debug, Formatter},
     io::Cursor,
@@ -32,14 +33,12 @@ use steel_protocol::{
 use steel_registry::packets::{
     CURRENT_MC_PROTOCOL, config, handshake, login as login_packets, status,
 };
+use steel_registry::vanilla_translations;
 use steel_utils::{
     MC_VERSION,
     locks::{AsyncMutex, SyncMutex},
-    translations,
 };
-use text_components::{
-    TextComponent, content::Resolvable, custom::CustomData, resolving::TextResolutor,
-};
+use text_components::{TextComponent, content::Resolvable, resolving::TextResolutor};
 use tokio::{
     io::{BufReader, BufWriter},
     net::{TcpStream, tcp::OwnedReadHalf},
@@ -522,11 +521,12 @@ impl JavaTcpClient {
                     let reason = match packet.protocol_version.cmp(&CURRENT_MC_PROTOCOL) {
                         Ordering::Equal => return Ok(()),
                         Ordering::Less => TextComponent::translated(
-                            translations::MULTIPLAYER_DISCONNECT_OUTDATED_CLIENT
+                            vanilla_translations::MULTIPLAYER_DISCONNECT_OUTDATED_CLIENT
                                 .message([MC_VERSION]),
                         ),
                         Ordering::Greater => TextComponent::translated(
-                            translations::MULTIPLAYER_DISCONNECT_INCOMPATIBLE.message([MC_VERSION]),
+                            vanilla_translations::MULTIPLAYER_DISCONNECT_INCOMPATIBLE
+                                .message([MC_VERSION]),
                         ),
                     };
                     self.kick(reason).await;
@@ -605,7 +605,7 @@ impl JavaTcpClient {
 
     /// Kicks the client with a given reason.
     pub async fn kick(&self, reason: TextComponent) {
-        log::info!("Kicking client {}: {:p}", self.id, reason);
+        log::info!("Kicking client {}: {}", self.id, reason.log());
         match self.protocol.load() {
             ConnectionProtocol::Login => {
                 let packet = CLoginDisconnect::new(&reason, self);
@@ -622,16 +622,14 @@ impl JavaTcpClient {
     }
 }
 
-impl TextResolutor for JavaTcpClient {
+impl<'a> TextResolutor<'a> for JavaTcpClient {
     fn resolve_content(&self, _resolvable: &Resolvable) -> TextComponent {
         TextComponent::new()
     }
 
-    fn resolve_custom(&self, _data: &CustomData) -> Option<TextComponent> {
-        None
-    }
-
-    fn translate(&self, _key: &str) -> Option<String> {
-        None
+    fn locale(&self) -> Cow<'_, str> {
+        self.client_information
+            .try_lock()
+            .map_or(Cow::Borrowed("en_us"), |ci| Cow::Owned(ci.language.clone()))
     }
 }

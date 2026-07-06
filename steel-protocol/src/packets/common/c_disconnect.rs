@@ -12,7 +12,7 @@ pub struct CDisconnect {
 
 impl CDisconnect {
     #[must_use]
-    pub fn new<T: TextResolutor>(reason: &TextComponent, player: &T) -> Self {
+    pub fn new<T: for<'a> TextResolutor<'a>>(reason: &TextComponent, player: &T) -> Self {
         Self {
             reason: reason.resolve(player),
         }

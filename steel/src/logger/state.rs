@@ -2,6 +2,7 @@ use crate::config::RotationTimeFormat;
 use crate::logger::file::LogFile;
 use crate::logger::history::History;
 use crate::logger::output::Output;
+use crate::logger::request::InputRequest;
 use crate::logger::selection::Selection;
 use crate::logger::suggestions::Completer;
 use crate::{config::LogConfig, logger::Move};
@@ -19,6 +20,7 @@ use tokio_util::sync::CancellationToken;
 
 pub struct LogState {
     pub out: Output,
+    pub request: Option<InputRequest>,
     pub completion: Completer,
     pub history: History,
     pub selection: Selection,
@@ -43,6 +45,7 @@ impl LogState {
 
         Ok(LogState {
             out: Output::new(),
+            request: None,
             completion: Completer::new(),
             history: History::new(path.clone(), max_history).await,
             selection: Selection::new(),
@@ -64,7 +67,7 @@ impl LogState {
         let string_len = string.chars().count();
         let length = self.out.length + string_len;
         let pos = self.out.pos + string_len;
-        self.completion.update(&mut self.out, pos);
+        self.completion.update(&mut self.out, &self.request, pos);
         self.rewrite_input(length, pos)
     }
 
@@ -83,7 +86,7 @@ impl LogState {
             self.out.length + string_len.saturating_sub(1)
         };
         let pos = self.out.pos + string_len;
-        self.completion.update(&mut self.out, pos);
+        self.completion.update(&mut self.out, &self.request, pos);
         self.rewrite_input(length, pos)
     }
 
@@ -95,7 +98,7 @@ impl LogState {
         self.out.text.remove(pos);
         let length = self.out.length - 1;
         let pos = self.out.pos - 1;
-        self.completion.update(&mut self.out, pos);
+        self.completion.update(&mut self.out, &self.request, pos);
         self.rewrite_input(length, pos)
     }
 
@@ -107,7 +110,7 @@ impl LogState {
         self.out.text.remove(pos);
         let length = self.out.length - 1;
         let pos = self.out.pos;
-        self.completion.update(&mut self.out, pos);
+        self.completion.update(&mut self.out, &self.request, pos);
         self.rewrite_input(length, pos)
     }
 
@@ -133,7 +136,8 @@ impl LogState {
         self.selection.clear();
 
         // Update suggestions
-        self.completion.update(&mut self.out, new_pos);
+        self.completion
+            .update(&mut self.out, &self.request, new_pos);
         self.rewrite_input(new_length, new_pos)
     }
 
@@ -141,7 +145,7 @@ impl LogState {
         self.out.text = String::new();
         self.completion.enabled = false;
         self.completion.selected = 0;
-        self.completion.update(&mut self.out, 0);
+        self.completion.update(&mut self.out, &self.request, 0);
         self.history.pos = 0;
         self.rewrite_input(0, 0)
     }

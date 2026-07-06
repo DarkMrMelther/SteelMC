@@ -15,16 +15,11 @@ use std::{
     time::{Duration, Instant},
 };
 
-use text_components::build::build_translations;
-
 mod entity_events;
-mod translations;
 
 const FMT: bool = cfg!(feature = "fmt");
 
 const OUT_DIR: &str = "src/generated";
-const IDS: &str = "vanilla_translations/ids";
-const REGISTRY: &str = "vanilla_translations/registry";
 const ENTITY_EVENTS: &str = "entity_events";
 const ASSET_LOCK_TIMEOUT: Duration = Duration::from_mins(5);
 
@@ -332,12 +327,6 @@ pub fn main() {
         fs::create_dir_all(format!("{OUT_DIR}/vanilla_translations"))
             .expect("Failed to create output directory");
     }
-
-    let content = build_translations("build_assets/en_us.json");
-    write_if_changed(format!("{OUT_DIR}/{IDS}.rs"), content.to_string());
-
-    let content = translations::build();
-    write_if_changed(format!("{OUT_DIR}/{REGISTRY}.rs"), content.to_string());
 
     let content = entity_events::build();
     write_if_changed(format!("{OUT_DIR}/{ENTITY_EVENTS}.rs"), content.to_string());

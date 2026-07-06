@@ -348,15 +348,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f88a43d011fc4a6876cb7344703e297c71dda42494fee094d5f7c76bf13f746"
 
 [[package]]
-name = "colored"
-version = "3.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "faf9468729b8cbcea668e36183cb69d317348c2e08e994829fb56ebfdfbaac34"
-dependencies = [
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1700,6 +1691,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "ownable"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5be13fa10c77ab9e9dc89fb30d6727f40d740ff2caf256dc28fc1a99efcf585d"
+dependencies = [
+ "ownable-core",
+ "ownable-macro",
+]
+
+[[package]]
+name = "ownable-core"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbc3131271b6bf6f636edd8d1c0762221650c28c37cfe61c151e46ef9b020d38"
+
+[[package]]
+name = "ownable-macro"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c5dc3663cb539af1af233d217a85ff56330c7b212b523128fcd9a5b4bd542ea"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "page_size"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3015,10 +3034,10 @@ dependencies = [
 [[package]]
 name = "text_components"
 version = "0.1.7"
-source = "git+https://github.com/Steel-Foundation/TextComponents.git?rev=e058b936e66b496385ba162b2e20344d14572a6a#e058b936e66b496385ba162b2e20344d14572a6a"
 dependencies = [
- "colored",
  "heck",
+ "memchr",
+ "ownable",
  "proc-macro2",
  "quote",
  "rand 0.10.0",
@@ -3026,6 +3045,7 @@ dependencies = [
  "serde",
  "serde_json",
  "simdnbt",
+ "smallvec",
  "supports-hyperlinks",
  "uuid",
 ]

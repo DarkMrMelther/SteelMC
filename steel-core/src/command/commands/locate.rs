@@ -3,7 +3,8 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use steel_utils::{BlockPos, ChunkPos, Identifier, translations};
+use steel_utils::{BlockPos, ChunkPos, Identifier};
+use steel_registry::vanilla_translations;
 use text_components::format::Color;
 use text_components::interactivity::{ClickEvent, HoverEvent};
 use text_components::{Modifier, TextComponent};
@@ -324,7 +325,7 @@ impl LocateStructureJob {
 
     fn send_not_found(&self) {
         self.sender.send_message(
-            &translations::COMMANDS_LOCATE_STRUCTURE_NOT_FOUND
+            &vanilla_translations::COMMANDS_LOCATE_STRUCTURE_NOT_FOUND
                 .message([TextComponent::from(self.query.query_name())])
                 .component(),
         );
@@ -349,7 +350,7 @@ fn horizontal_distance(a: BlockPos, b: BlockPos) -> i32 {
 }
 
 fn locate_success_component(structure_name: String, pos: BlockPos, distance: i32) -> TextComponent {
-    translations::COMMANDS_LOCATE_STRUCTURE_SUCCESS
+    vanilla_translations::COMMANDS_LOCATE_STRUCTURE_SUCCESS
         .message([
             TextComponent::from(structure_name),
             locate_coordinates_component(pos),
@@ -362,7 +363,7 @@ fn locate_coordinates_component(pos: BlockPos) -> TextComponent {
     let displayed_y = "~";
     TextComponent::plain("[")
         .add_child(
-            translations::CHAT_COORDINATES
+            vanilla_translations::CHAT_COORDINATES
                 .message([
                     TextComponent::from(pos.0.x.to_string()),
                     TextComponent::from(displayed_y),
@@ -373,7 +374,7 @@ fn locate_coordinates_component(pos: BlockPos) -> TextComponent {
         .add_child(TextComponent::plain("]"))
         .color(Color::Green)
         .hover_event(HoverEvent::show_text(
-            &translations::CHAT_COORDINATES_TOOLTIP,
+            &vanilla_translations::CHAT_COORDINATES_TOOLTIP,
         ))
         .click_event(ClickEvent::suggest_command(format!(
             "/tp @s {} {} {}",

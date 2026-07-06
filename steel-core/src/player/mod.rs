@@ -54,7 +54,10 @@ use block_breaking::BlockBreakingManager;
 use enum_dispatch::enum_dispatch;
 use game_mode_state::PlayerGameModeState;
 pub use game_profile::{GameProfile, GameProfileAction};
-use std::sync::{Arc, Weak};
+use std::{
+    borrow::Cow,
+    sync::{Arc, Weak},
+};
 use steel_macros::entity_impl;
 use steel_protocol::packets::game::{
     AttributeSnapshot, CEntityEvent, CPlayerCombatKill, CRespawn, CSetDefaultSpawnPosition,
@@ -83,9 +86,9 @@ use arc_swap::ArcSwap;
 use steel_utils::locks::SyncMutex;
 use steel_utils::types::{Difficulty, GameType};
 use text_components::TextComponent;
+use text_components::content::Resolvable;
 use text_components::resolving::TextResolutor;
-use text_components::translation::TranslatedMessage;
-use text_components::{content::Resolvable, custom::CustomData};
+use text_components::translation::TranslatedContent;
 
 use crate::chunk::chunk_request::{ChunkRequestHandle, ChunkRequestState};
 use crate::config::RuntimeConfig;
@@ -818,7 +821,7 @@ impl Player {
 
         // TODO: use CombatTracker for multi-arg messages (killer name, item, etc.)
         let death_key = format!("death.attack.{}", source.damage_type.message_id);
-        let death_message = TranslatedMessage {
+        let death_message = TranslatedContent {
             key: death_key.into(),
             fallback: None,
             args: Some(Box::new([TextComponent::plain(
@@ -2003,17 +2006,17 @@ impl LivingEntity for Player {
     }
 }
 
-impl TextResolutor for Player {
+impl<'a> TextResolutor<'a> for Player {
     fn resolve_content(&self, _resolvable: &Resolvable) -> TextComponent {
         TextComponent::new()
     }
 
-    fn resolve_custom(&self, _data: &CustomData) -> Option<TextComponent> {
-        None
+    fn locale(&self) -> Cow<'_, str> {
+        Cow::Owned(self.client_information().language)
     }
 
-    fn translate(&self, _key: &str) -> Option<String> {
-        None
+    fn entity_id(&self) -> Option<i32> {
+        Some(self.base.id())
     }
 }
 

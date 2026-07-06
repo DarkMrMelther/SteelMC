@@ -1,8 +1,14 @@
 use std::{
+    env,
     fmt::{self, Debug, Display, Formatter, Write},
+    pin::Pin,
+    range::RangeInclusive,
     sync::{Arc, OnceLock},
 };
-use tracing::field::{Field, Visit};
+use tracing::{
+    field::{Field, Visit},
+    warn,
+};
 
 /// A reference to the Steel Logger\
 /// Use the log macros instead: `log::info`!, `logger::chat`!, etc...
@@ -152,8 +158,42 @@ impl Visit for LogData {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+/// The kind of response the user should response
+pub enum RequestKind {
+    /// Can return any string
+    String,
+    /// Can return any of the given options
+    Options(&'static [&'static str]),
+    /// Can return a number of the given range
+    Numeral(RangeInclusive<i32>),
+    /// Should return "yes", "y", "true", "no", "n", "false"
+    Bool,
+}
+
 /// A trait for Logging Steel data
 pub trait SteelLogger: Send + Sync {
     /// Does the logging logic
     fn log(&self, level: Level, data: LogData);
+
+    /// Request the user to input something
+    fn request_input(
+        &self,
+        kind: RequestKind,
+        message: String,
+    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + '_>>;
+}
+
+/// A helper function to request input from a user
+pub async fn request_input(kind: RequestKind, message: String) -> Option<String> {
+    if kind == RequestKind::Bool && env::var_os("STEEL_AUTO_ACCEPT").is_some() {
+        warn!("{message}");
+        console!("yes");
+        return Some(String::from("yes"));
+    }
+    STEEL_LOGGER
+        .get()
+        .expect("Steel logger isn't initialized!")
+        .request_input(kind, message)
+        .await
 }

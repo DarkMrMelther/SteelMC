@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use steel_registry::{item_stack::ItemStack, items::ItemRef};
-use steel_utils::translations;
+use steel_registry::vanilla_translations;
 use text_components::TextComponent;
 
 use crate::{
@@ -183,13 +183,13 @@ fn clear_messages(
         && let Some(name) = target_name
     {
         sender.send_message(
-            &translations::CLEAR_FAILED_SINGLE
+            &vanilla_translations::CLEAR_FAILED_SINGLE
                 .message([TextComponent::from(name)])
                 .into(),
         );
     } else if count == 0 {
         sender.send_message(
-            &translations::CLEAR_FAILED_MULTIPLE
+            &vanilla_translations::CLEAR_FAILED_MULTIPLE
                 .message([TextComponent::from(format!("{player_amount}"))])
                 .into(),
         );
@@ -198,7 +198,7 @@ fn clear_messages(
         && let Some(name) = target_name
     {
         sender.send_message(
-            &translations::COMMANDS_CLEAR_TEST_SINGLE
+            &vanilla_translations::COMMANDS_CLEAR_TEST_SINGLE
                 .message([
                     TextComponent::from(format!("{count}")),
                     TextComponent::from(name),
@@ -207,7 +207,7 @@ fn clear_messages(
         );
     } else if count_only {
         sender.send_message(
-            &translations::COMMANDS_CLEAR_TEST_MULTIPLE
+            &vanilla_translations::COMMANDS_CLEAR_TEST_MULTIPLE
                 .message([
                     TextComponent::from(format!("{count}")),
                     TextComponent::from(format!("{player_amount}")),
@@ -218,7 +218,7 @@ fn clear_messages(
         && let Some(name) = target_name
     {
         sender.send_message(
-            &translations::COMMANDS_CLEAR_SUCCESS_SINGLE
+            &vanilla_translations::COMMANDS_CLEAR_SUCCESS_SINGLE
                 .message([
                     TextComponent::from(format!("{count}")),
                     TextComponent::from(name),
@@ -227,7 +227,7 @@ fn clear_messages(
         );
     } else {
         sender.send_message(
-            &translations::COMMANDS_CLEAR_SUCCESS_MULTIPLE
+            &vanilla_translations::COMMANDS_CLEAR_SUCCESS_MULTIPLE
                 .message([
                     TextComponent::from(format!("{count}")),
                     TextComponent::from(format!("{player_amount}")),

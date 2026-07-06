@@ -57,6 +57,7 @@ workspace = true
 [features]
 default = ["mimalloc"]
 stand-alone = []
+require-eula = []
 deadlock_detection = ["dep:parking_lot"]
 dhat-heap = ["dhat"]
 mimalloc = ["dep:mimalloc"]

@@ -11,7 +11,7 @@ pub struct CLoginDisconnect {
 
 impl CLoginDisconnect {
     #[must_use]
-    pub fn new<T: TextResolutor>(reason: &TextComponent, resolutor: &T) -> Self {
+    pub fn new<T: for<'a> TextResolutor<'a>>(reason: &TextComponent, resolutor: &T) -> Self {
         Self {
             reason: reason.resolve(resolutor),
         }

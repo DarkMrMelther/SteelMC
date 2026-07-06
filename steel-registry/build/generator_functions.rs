@@ -106,7 +106,7 @@ pub fn generate_spawn_condition_entry(entry: &SpawnConditionEntry) -> TokenStrea
 pub fn generate_text_component(component: &TextComponentJson) -> TokenStream {
     let translate = component.translate.as_str();
     quote! {
-        TextComponent::translated(TranslatedMessage::new(#translate, None))
+        TextComponent::translated(TranslatedContent::new(#translate, None))
     }
 }
 
