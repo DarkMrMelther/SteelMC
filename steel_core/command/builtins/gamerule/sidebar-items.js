@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["command","game_rule_result","missing_rule_value","query_rule","registration","rule_display_name","rule_literal","set_bool_rule","set_int_rule","set_rule"]};

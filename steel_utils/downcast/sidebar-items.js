@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["private"],"struct":["DowncastTypeKey"],"trait":["Downcast","DowncastType","ErasedType"]};

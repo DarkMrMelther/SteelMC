@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ENDER_PEARL_TICKET_TIMEOUT","GENERATION_THREAD_MULTIPLE"],"fn":["light_update_window_contains"],"struct":["ChunkMap","ChunkMapGameTickTimings","ChunkMapSchedulingTimings","GenerationTaskPriority","InFlightLightUpdates","LightUpdateState","PendingChunkLightUpdates","PendingLightUpdates","RunningGenerationTaskPermit","TickableChunk"]};
